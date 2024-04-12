@@ -1,0 +1,4 @@
+- [TESound](https://dl.dropboxusercontent.com/u/3713769/web/Love/TLTools/TEsound.lua)
+- [lua-MessagePack](http://fperrad.github.io/lua-MessagePack)
+- [sti is Simple-Tiled-Implementation](https://github.com/karai17/Simple-Tiled-Implementation.git)
+  - [sti documentation](http://karai17.github.io/Simple-Tiled-Implementation/modules/sti.html)
