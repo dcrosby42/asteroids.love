@@ -505,11 +505,16 @@ end
 
 function Loaders.loadConfig(res, config, loaders)
   loaders = loaders or Loaders
-  local loader = loaders[config.type]
-  assert(loader, "Loaders.loadConfig: no Loader found for type '" ..
-    tostring(config and config.type) .. "': " .. inspect(config))
-  loader(res, config)
-  return res
+  if config.type == "resource_file" then
+    local confs = loadRelativeFile(config.file)()
+    return Loaders.loadConfigs(res, confs, loaders)
+  else
+    local loader = loaders[config.type]
+    assert(loader, "Loaders.loadConfig: no Loader found for type '" ..
+      tostring(config and config.type) .. "': " .. inspect(config))
+    loader(res, config)
+    return res
+  end
 end
 
 function Loaders.copy()
