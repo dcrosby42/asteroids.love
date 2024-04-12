@@ -33,9 +33,17 @@ return {
     data = { bgmusic = false },
   },
   -- {
+  --   type = "resource_file",
+  --   file = "modules/asteroids/images/asteranims.res.lua",
+  -- },
+  {
+    type = "resource_file",
+    file = "modules/asteroids/images/roidpics.res.lua",
+  },
+  -- {
   --   type = "pic",
-  --   name = "puck_blue",
-  --   data = { path = "modules/airhockey/images/airhockey_puck_blue.png" },
+  --   name = "roid_medium_grey_a1",
+  --   data = { path = "modules/asteroids/images/medium/grey/a1/a10000.png" },
   -- },
   -- {
   --   type = "sound",

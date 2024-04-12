@@ -11,7 +11,7 @@ function E.initialEntities(res)
 
   local estore = Estore:new()
 
-   E.asteroidsGame(estore, res)
+  E.asteroidsGame(estore, res)
 
   return estore
 end
@@ -24,14 +24,54 @@ function E.asteroidsGame(estore, res)
 
   -- local world = E.world(viewport, res)
   local world = viewport:newEntity({
-    {"name", {name="world"}},
+    { "name", { name = "world" } },
   })
   -- E.physicsWorld(world, res)
-
   -- E.background(world, res)
+
+  -- world:newEntity({
+  --   { "name", { name = "roid1" } },
+  --   { 'tr',   { x = 100, y = 100, } },
+  --   { 'anim', {
+  --     id = "large_grey_a1",
+  --     -- x = -100,
+  --     -- y = -50,
+  --     cx = 0.5,
+  --     cy = 0.5,
+  --     -- sx = 0.5,
+  --     -- sy = 0.5,
+  --     -- r = math.pi / 4,
+  --     -- debug = true,
+  --     timer = "roidtimer"
+  --   } },
+  --   { 'timer', {
+  --     name = "roidtimer",
+  --     countDown = false,
+  --     factor = 0.1,
+  --   } }
+  -- })
+
+  world:newEntity({
+    { "name", { name = "roid2" } },
+    { 'tr',   { x = 400, y = 100, } },
+    { 'pic', {
+      id = "roid_medium_grey_a1",
+      -- id = "roid_large_grey_a1",
+      -- x = -100,
+      -- y = -50,
+      cx = 0.5,
+      cy = 0.5,
+      -- sx = 0.5,
+      -- sy = 0.5,
+      -- r = math.pi / 4,
+      debug = false,
+    } },
+    { 'timer', { countDown = false, } }
+  })
 
   E.camera(world, res, "camera1")
   viewport.viewport.camera = "camera1"
+
 
   -- E.addReloadButton(estore, res)
 end
