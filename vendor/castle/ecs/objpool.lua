@@ -37,7 +37,12 @@ end
 
 function ObjPool:getClean()
   local obj = self:get()
-  tmerge(obj, self.proto)
+  for key, val in pairs(self.proto) do
+    if type(val) == "table" then
+      val = tcopydeep(val)
+    end
+    obj[key] = val
+  end
   return obj
 end
 
