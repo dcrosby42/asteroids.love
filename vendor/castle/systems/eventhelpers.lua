@@ -58,4 +58,11 @@ function M.onKeyPressed(events, key, fn)
   end)
 end
 
+function M.handleKeyPresses(events, fnMap)
+  M.on(events, "keyboard", "pressed", function(evt)
+    local fn = fnMap[evt.key]
+    if fn then fn(evt) end
+  end)
+end
+
 return M
