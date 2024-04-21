@@ -40,6 +40,10 @@ return {
     type = "resource_file",
     file = "modules/asteroids/images/roidpics.res.lua",
   },
+  {
+    type = "resource_file",
+    file = "modules/asteroids/images/ships/ship_pics.res.lua",
+  },
   -- {
   --   type = "pic",
   --   name = "roid_medium_grey_a1",

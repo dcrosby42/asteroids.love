@@ -69,6 +69,20 @@ function E.asteroidsGame(estore, res)
     { 'timer', { countDown = false, } }
   })
 
+  world:newEntity({
+    { "name", { name = "ship" } },
+    { 'tr',   { x = 300, y = 300, } },
+    { 'pic', {
+      id = "ship_example_05",
+      sx = 0.75,
+      sy = 0.75,
+      cx = 0.5,
+      cy = 0.5,
+      r = 0.6,
+      debug = false,
+    } },
+  })
+
   E.camera(world, res, "camera1")
   viewport.viewport.camera = "camera1"
 
