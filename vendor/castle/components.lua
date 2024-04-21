@@ -29,7 +29,7 @@ Comp.define("follower", { 'targetname', '' })
 --
 -- VISUALS
 --
-Comp.define('viewport', { 'camera', '', 'blockout', true, 'bgcolor', { 0, 0, 0 } })
+Comp.define('viewport', { 'camera', 'camera', 'blockout', true, 'bgcolor', { 0, 0, 0 } })
 
 Comp.define("bgcolor", { 'color', { 0, 0, 0 } })
 
