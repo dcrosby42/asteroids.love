@@ -18,6 +18,7 @@ return {
           "castle.systems.tween",
           "castle.systems.keystate",
           "modules.asteroids.systems.devsystem",
+          "modules.asteroids.systems.jig_ship",
         }
       },
       drawSystems = {
@@ -59,13 +60,13 @@ return {
   --   name = "city",
   --   data = { file = "modules/airhockey/sounds/welcome-to-city.mp3", },
   -- },
-  -- {
-  --   type = "font",
-  --   name = "narpassword",
-  --   data = {
-  --     file = "modules/common/fonts/narpassword.ttf",
-  --     -- choices = { 24, 48, 64 },
-  --     choices = { 64 },
-  --   },
-  -- },
+  {
+    type = "font",
+    name = "narpassword",
+    data = {
+      file = "modules/common/fonts/narpassword.ttf",
+      -- choices = { 24, 48, 64 },
+      choices = { 64 },
+    },
+  },
 }

@@ -1,6 +1,7 @@
 local Debug = require("mydebug").sub("AirHockey", true, true)
 local Estore = require "castle.ecs.estore"
 local inspect = require "inspect"
+local Ship = require "modules.asteroids.entities.ship"
 
 
 local E = {}
@@ -11,7 +12,9 @@ function E.initialEntities(res)
 
   local estore = Estore:new()
 
-  E.asteroidsGame(estore, res)
+  -- E.asteroidsGame(estore, res)
+
+  Ship.jig(estore, res, E)
 
   return estore
 end
@@ -21,11 +24,11 @@ function E.asteroidsGame(estore, res)
   -- E.dev_state(estore, res)
 
   local viewport = E.viewport(estore, res)
-
-  -- local world = E.world(viewport, res)
   local world = viewport:newEntity({
     { "name", { name = "world" } },
   })
+  E.camera(world, res)
+
   -- E.physicsWorld(world, res)
   -- E.background(world, res)
 
@@ -69,23 +72,6 @@ function E.asteroidsGame(estore, res)
     { 'timer', { countDown = false, } }
   })
 
-  world:newEntity({
-    { "name", { name = "ship" } },
-    { 'tr',   { x = 300, y = 300, } },
-    { 'pic', {
-      id = "ship_example_05",
-      sx = 0.75,
-      sy = 0.75,
-      cx = 0.5,
-      cy = 0.5,
-      r = 0.6,
-      debug = false,
-    } },
-  })
-
-  E.camera(world, res, "camera1")
-  viewport.viewport.camera = "camera1"
-
 
   -- E.addReloadButton(estore, res)
 end
@@ -94,22 +80,26 @@ function E.viewport(parent, res)
   local w, h = res.data.screen_size.width, res.data.screen_size.height
   return parent:newEntity({
     { 'name',     { name = 'viewport' } },
-    { 'viewport', { camera = "" } },
+    { 'viewport', {} }, -- camera will default to "camera"
     { 'tr',       {} },
     { 'box',      { w = w, h = h, debug = false } }
   })
 end
 
 function E.camera(parent, res, name)
-  local w, h
-  if parent.box then
-    w, h = parent.box.w, parent.box.h
-  else
-    w, h = love.graphics.getDimensions()
+  -- local w, h
+  -- if parent.box then
+  --   w, h = parent.box.w, parent.box.h
+  -- else
+  --   w, h = love.graphics.getDimensions()
+  -- end
+  if not name or name == "" then
+    name = "camera"
   end
   parent:newEntity({
     { 'name', { name = name } },
-    { 'tr',   { x = w / 2, y = h / 2 } }
+    -- { 'tr',   { x = w / 2, y = h / 2 } }
+    { 'tr',   { x = 0, y = 0 } }
   })
 end
 
