@@ -59,7 +59,17 @@ local function updateWorld(ecsMod, world, action)
   elseif action.state == 'pressed' and action.key == 'escape' then
     -- toggle editor
     world.editor.on = not world.editor.on
-    if world.editor.on then world.editor.ui.pausedCheckbox.checked = true end
+    if world.editor.on then
+      print("Editor console ON (paused)")
+      world.editor.ui.pausedCheckbox.checked = true
+    else
+      if action.shift then
+        print("Editor console OFF (STILL PAUSED)")
+      else
+        print("Editor console OFF (unpaused)")
+        world.editor.ui.pausedCheckbox.checked = false
+      end
+    end
   elseif action.type == "tick" then
     -- time passed? doTick
     if not paused then world, sidefx = doTick(ecsMod, world, action) end
