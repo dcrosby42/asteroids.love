@@ -68,15 +68,23 @@ end
 
 function Estore:destroyEntity(e)
   if not e then return end
-  for _, childEnt in ipairs(e._children) do self:destroyEntity(childEnt) end
 
-  local compsToRemove = {}
-  for _, comp in pairs(self.comps) do
-    if comp.eid == e.eid then table.insert(compsToRemove, comp) end
+  -- Destroy child entities. (Careful to iterate on a shallow copy of the _children list)
+  for _, childEnt in ipairs(lcopy(e._children)) do
+    self:destroyEntity(childEnt)
   end
 
+  -- Collect components for destruction
+  local compsToRemove = {}
+  for _, comp in pairs(self.comps) do
+    -- sanity check: ensure all our components actually consider this entity its owner:
+    if comp.eid == e.eid then
+      table.insert(compsToRemove, comp)
+    end
+  end
+
+  -- Destroy the Components
   for _, comp in ipairs(compsToRemove) do
-    -- print("removing comp "..tflatten(comp))
     self:removeComp(comp)
   end
 
