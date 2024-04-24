@@ -616,20 +616,20 @@ function pickRandom(list)
   return list[randomInt(1, #list)]
 end
 
-function pairsByKeys(t, f)
-  local a = {}
+function pairsByKeys(t, keySortFn)
+  local keys = {}
   for n in pairs(t) do
-    table.insert(a, n)
+    table.insert(keys, n)
   end
-  table.sort(a, f)
+  table.sort(keys, keySortFn)
   local i = 0 -- iterator variable
   local iter = function()
     -- iterator function
     i = i + 1
-    if a[i] == nil then
+    if keys[i] == nil then
       return nil
     else
-      return a[i], t[a[i]]
+      return keys[i], t[keys[i]]
     end
   end
   return iter
