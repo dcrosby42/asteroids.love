@@ -119,7 +119,18 @@ local function matchEntity(e, f)
   return false
 end
 
+local function compareEids(key1, key2)
+  local key1s = string.sub(key1, 2)
+  local key2s = string.sub(key2, 2)
+  if #key1s > 0 and #key2s > 0 then
+    return tonumber(key1s) < tonumber(key2s)
+  end
+  -- hmmmm... fall back to traditional < sort
+  return key1 < key2
+end
+
 local function getFilteredEntities(ents, filter)
+  local fents = {}
   local ret = {}
   for eid, e in pairsByKeys(ents, compareEids) do
     if matchEntity(e, filter) then table.insert(ret, e) end
