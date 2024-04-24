@@ -10,7 +10,7 @@ function Ship.jig(parent, res, E)
 
   Ship.ship(world, res, E)
 
-  Ship.flameMenu(parent, res, E)
+  -- Ship.flameMenu(parent, res, E)
 end
 
 function Ship.basicWorld(parent, res, E)
@@ -77,7 +77,8 @@ function Ship.flameMenu(parent, res, E)
   for i, picId in ipairs(Ship.Flames) do
     x = (i - 1) * 50
     menu:newEntity({
-      { "tr", { x = x, y = y } },
+      { "name", { name = "menu-" .. picId } },
+      { "tr",   { x = x, y = y } },
       { 'pic', {
         id = picId,
         sx = size,

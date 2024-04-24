@@ -1,5 +1,6 @@
 local EventHelpers = require "castle.systems.eventhelpers"
 local State = require "castle.state"
+local E = require "modules.asteroids.entities"
 local Ship = require "modules.asteroids.entities.ship"
 
 local ZoomFactor = 0.2
@@ -89,7 +90,7 @@ local function incrementFlameMenuSelection(inc, estore)
   cursorE.tr.x = (selected - 1) * 50
 end
 
-local function controlFlame(jigE, estore, input, res)
+local function controlFlame(estore, input, res)
   EventHelpers.handleKeyPresses(input.events, {
     ["f"] = function(evt)
       -- toggle flame visibility (alpha)
@@ -101,18 +102,6 @@ local function controlFlame(jigE, estore, input, res)
         end
         return true
       end)
-    end,
-    ["left"] = function(evt)
-      -- select prev flame pic
-      incrementFlameMenuSelection(-1, estore)
-      local flamePicId = getFlameMenuValue(estore, input, res)
-      setShipFlamePic(flamePicId, estore)
-    end,
-    ["right"] = function(evt)
-      -- select next flame pic
-      incrementFlameMenuSelection(1, estore)
-      local flamePicId = getFlameMenuValue(estore, input, res)
-      setShipFlamePic(flamePicId, estore)
     end,
     ["up"] = function(evt)
       -- move flame up
@@ -130,24 +119,48 @@ local function controlFlame(jigE, estore, input, res)
         return true
       end)
     end,
-    -- ["1"] = function(evt)
-    --   -- select flame 01
-    -- end,
-    -- ["2"] = function(evt)
-    --   -- select flame 02
-    --   selectFlameInMenu(2, estore, input, res)
-    --   local flamePicId = getFlameMenuValue(estore, input, res)
-    --   setShipFlamePic(flamePicId, estore)
-    -- end,
   })
+end
+local function controlFlameMenu(flameMenuE, estore, input, res)
+  local closeMenu = false
+  EventHelpers.handleKeyPresses(input.events, {
+    ["left"] = function(evt)
+      -- select prev flame pic
+      incrementFlameMenuSelection(-1, estore)
+      local flamePicId = getFlameMenuValue(estore, input, res)
+      setShipFlamePic(flamePicId, estore)
+    end,
+    ["right"] = function(evt)
+      -- select next flame pic
+      incrementFlameMenuSelection(1, estore)
+      local flamePicId = getFlameMenuValue(estore, input, res)
+      setShipFlamePic(flamePicId, estore)
+    end,
+    ["1"] = function(evt)
+      closeMenu = true
+    end,
+  })
+  if closeMenu then
+    flameMenuE:destroy()
+  end
 end
 
 local match = hasTag("jig_ship")
+local matchFlameMenu = hasName("flame_menu")
 
 return function(estore, input, res)
   estore:seekEntity(match, function(jigE)
     controlCamera(jigE, estore, input, res)
-    controlFlame(jigE, estore, input, res)
     return true
   end)
+
+  local flameMenuE = estore:getEntityByName("flame_menu")
+  if flameMenuE then
+    controlFlame(estore, input, res)
+    controlFlameMenu(flameMenuE, estore, input, res)
+  else
+    EventHelpers.onKeyPressed(input.events, "1", function()
+      Ship.flameMenu(estore, res, E)
+    end)
+  end
 end
