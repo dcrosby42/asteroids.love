@@ -28,6 +28,8 @@ end
 function entityName(e)
   if e.name and e.name.name then
     return e.name.name .. " (" .. tostring(e.eid) .. ")"
+  elseif e.tag and e.tag.name then
+    return "[tag=" .. e.tag.name .. "] (" .. tostring(e.eid) .. ")"
   else
     return tostring(e.eid)
   end
