@@ -20,7 +20,15 @@ Comp.define("state", { 'value', '' })
 
 Comp.define("box", ext(RectAttrs, { 'debug', false, 'color', { 1, 1, 0, 1 } })) -- sx,sy?
 
-Comp.define("timer", { 't', 0, 'factor', 1, 'reset', 0, 'countDown', true, 'loop', false, 'alarm', false, 'event', '' })
+Comp.define("timer", {
+  't', 0,
+  'factor', 1,
+  'reset', 0,
+  'countDown', true,
+  'loop', false,
+  'alarm', false,
+  'event', '',
+})
 
 Comp.define("followable", { 'targetname', '' })
 
@@ -121,10 +129,11 @@ Comp.define("contact",
 --
 
 Comp.define("keystate", {
-  'handle', {},   -- list of key names to be tracked
-  'pressed', {},  -- set of keys recently pressed
-  'held', {},     -- set of keys recently pressed and/or held
-  'released', {}, -- set of keys released
+  'handle', {},     -- list of key names to be tracked
+  'consume', false, -- whether this keystate should "consume" events or merely observe
+  'pressed', {},    -- set of keys recently pressed
+  'held', {},       -- set of keys recently pressed and/or held
+  'released', {},   -- set of keys released
 })
 
 Comp.define("button", {

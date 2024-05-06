@@ -45,11 +45,11 @@ return {
     type = "resource_file",
     file = "modules/asteroids/images/ships/ship_pics.res.lua",
   },
-  -- {
-  --   type = "pic",
-  --   name = "roid_medium_grey_a1",
-  --   data = { path = "modules/asteroids/images/medium/grey/a1/a10000.png" },
-  -- },
+  {
+    type = "pic",
+    name = "example_background",
+    data = { path = "modules/asteroids/images/example_background.png" },
+  },
   -- {
   --   type = "sound",
   --   name = "drop_puck1",

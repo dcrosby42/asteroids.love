@@ -7,6 +7,7 @@ function Ship.jig(parent, res, E)
     { "tag",   { name = "jig_ship" } },
     { "state", { name = "debug_draw", value = false } },
   })
+  Ship.dev_background(world, res, E)
 
   Ship.ship(world, res, E)
 
@@ -26,23 +27,45 @@ function Ship.basicWorld(parent, res, E)
   return world
 end
 
+function Ship.dev_background(parent, res, E)
+  local picId = "example_background"
+  local picw, pich = 1000, 1000
+  local offx, offy = -1500, -1500
+  local comps = {}
+  for i = 0, 2 do
+    local x = offx + (i * picw)
+    for j = 0, 2 do
+      local y = offy + (j * pich)
+      local cmp = { "pic", { id = picId, x = x, y = y } }
+      comps[#comps + 1] = cmp
+    end
+  end
+  return parent:newEntity(comps)
+end
+
 function Ship.ship(parent, res, E)
   local ship = parent:newEntity({
-    { "tr",   {} },
-    { "name", { name = "ship" } },
+    { "tr",       {} },
+    { "name",     { name = "ship" } },
+    { "keystate", { handle = { "left", "right", "up", "down" } } },
+    { "vel",      {} },
   })
   ship:newEntity({
     { "tag", { name = "ship_flame" } },
     { "tr",  { y = 30 } },
     { 'pic', {
+      name = "flame",
       id = "ship_flame_06",
       sx = 0.75,
       sy = 0.75,
       cx = 0.5,
       cy = 0,
-      -- x = 0,
-      -- y = 74,
-      debug = false,
+    } },
+    { "timer", {
+      name = "flame",
+      reset = 1,
+      countDown = false,
+      loop = true,
     } },
   })
   ship:newEntity({
@@ -66,10 +89,11 @@ function Ship.flameMenu(parent, res, E)
 
   local initialSelected = 6
   local menu = parent:newEntity({
-    { "tr",    { x = 20, y = h - 80 } },
-    { "name",  { name = "flame_menu" } },
-    { "state", { name = "selected", value = initialSelected } },
+    { "tr",       { x = 20, y = h - 80 } },
+    { "name",     { name = "flame_menu" } },
+    { "state",    { name = "selected", value = initialSelected } },
     -- { "rect",  { w = 50 * 11, h = 70, color = { 0.5, 0.5, 1, 1 } } },
+    { "keystate", { handle = { "1", "j", "k" } } },
 
   })
   local size = 0.5

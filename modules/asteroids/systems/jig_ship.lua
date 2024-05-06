@@ -3,8 +3,14 @@ local State = require "castle.state"
 local E = require "modules.asteroids.entities"
 local Ship = require "modules.asteroids.entities.ship"
 
+local min = math.min
+local sin = math.sin
+local pi = math.pi
 local ZoomFactor = 0.2
 local RotFactor = math.pi / 8
+
+local match = hasTag("jig_ship")
+local matchShipFlame = hasTag("ship_flame")
 
 local function zoomCameraTo(camera, zoom)
   camera.tr.sx = zoom
@@ -86,23 +92,11 @@ local function incrementFlameMenuSelection(inc, estore)
   State.set(menu, "selected", selected)
 
   local cursorE = estore:getEntityByName("menu_cursor")
-  -- print(not not cursorE)
   cursorE.tr.x = (selected - 1) * 50
 end
 
-local function controlFlame(estore, input, res)
+local function adjustFlamePosition(estore, input, res)
   EventHelpers.handleKeyPresses(input.events, {
-    ["f"] = function(evt)
-      -- toggle flame visibility (alpha)
-      estore:seekEntity(hasTag("ship_flame"), function(e)
-        if e.pic.color[4] == 0 then
-          e.pic.color[4] = 1
-        else
-          e.pic.color[4] = 0
-        end
-        return true
-      end)
-    end,
     ["up"] = function(evt)
       -- move flame up
       estore:seekEntity(hasTag("ship_flame"), function(e)
@@ -121,46 +115,97 @@ local function controlFlame(estore, input, res)
     end,
   })
 end
-local function controlFlameMenu(flameMenuE, estore, input, res)
-  local closeMenu = false
-  EventHelpers.handleKeyPresses(input.events, {
-    ["left"] = function(evt)
-      -- select prev flame pic
+
+local function controlFlameMenu(estore, input, res)
+  local flameMenuE = estore:getEntityByName("flame_menu")
+  if flameMenuE then
+    adjustFlamePosition(estore, input, res)
+
+    local closeMenu = false
+    if flameMenuE.keystate.pressed.j then
       incrementFlameMenuSelection(-1, estore)
       local flamePicId = getFlameMenuValue(estore, input, res)
       setShipFlamePic(flamePicId, estore)
-    end,
-    ["right"] = function(evt)
-      -- select next flame pic
+    end
+    if flameMenuE.keystate.pressed.k then
       incrementFlameMenuSelection(1, estore)
       local flamePicId = getFlameMenuValue(estore, input, res)
       setShipFlamePic(flamePicId, estore)
-    end,
-    ["1"] = function(evt)
+    end
+    if flameMenuE.keystate.pressed["1"] then
       closeMenu = true
-    end,
-  })
-  if closeMenu then
-    flameMenuE:destroy()
+    end
+    if closeMenu then
+      flameMenuE:destroy()
+    end
+  else
+    EventHelpers.onKeyPressed(input.events, "1", function()
+      -- "1" key: instantiate flame menu
+      Ship.flameMenu(estore, res, E)
+    end)
   end
 end
 
-local match = hasTag("jig_ship")
-local matchFlameMenu = hasName("flame_menu")
+local Vec = require 'vector-light'
+local function controlShip(estore, input, res)
+  local ship = estore:getEntityByName("ship")
+  if not ship then return end
+
+  local spinSpeed = pi * 1.5
+
+  -- Control direction and thrust
+  if ship.keystate.held.left then
+    ship.tr.r = ship.tr.r - (spinSpeed * input.dt)
+  end
+  if ship.keystate.held.right then
+    ship.tr.r = ship.tr.r + (spinSpeed * input.dt)
+  end
+  if ship.keystate.held.up then
+    -- accelerate under thrust
+    local speed = 6
+    local dx, dy = Vec.mul(speed * input.dt, Vec.rotate(ship.tr.r, 0, -1))
+    ship.vel.dx = ship.vel.dx + dx
+    ship.vel.dy = ship.vel.dy + dy
+  else
+    -- auto-brake
+    if Vec.len(ship.vel.dx, ship.vel.dy) > 0 then
+      local speed = 6
+      local dx, dy = Vec.mul(speed * input.dt, Vec.normalize(Vec.mul(-1, ship.vel.dx, ship.vel.dy)))
+      ship.vel.dx = min(ship.vel.dx + dx)
+      ship.vel.dy = min(ship.vel.dy + dy)
+    end
+  end
+
+  -- Show ship flame only when thrust active
+  estore:seekEntity(matchShipFlame, function(flameE)
+    if ship.keystate.held.up then
+      flameE.pic.color[4] = 1
+    else
+      flameE.pic.color[4] = 0
+    end
+    return true
+  end)
+
+  -- Apply velocity to get motion
+  ship.tr.x = ship.tr.x + ship.vel.dx
+  ship.tr.y = ship.tr.y + ship.vel.dy
+end
+
 
 return function(estore, input, res)
+  controlShip(estore, input, res)
+
+  -- Animate ship flame
+  estore:seekEntity(matchShipFlame, function(flameE)
+    flameE.pic.sy = 0.75 + sin(flameE.timer.t * 4 * pi * 2) * 0.1
+    return true
+  end)
+
+  controlFlameMenu(estore, input, res)
+
+  -- Camera controls
   estore:seekEntity(match, function(jigE)
     controlCamera(jigE, estore, input, res)
     return true
   end)
-
-  local flameMenuE = estore:getEntityByName("flame_menu")
-  if flameMenuE then
-    controlFlame(estore, input, res)
-    controlFlameMenu(flameMenuE, estore, input, res)
-  else
-    EventHelpers.onKeyPressed(input.events, "1", function()
-      Ship.flameMenu(estore, res, E)
-    end)
-  end
 end
