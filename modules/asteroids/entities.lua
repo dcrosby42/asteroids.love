@@ -3,6 +3,8 @@ local Estore = require "castle.ecs.estore"
 local inspect = require "inspect"
 local Ship = require "modules.asteroids.entities.ship"
 
+local W = require "modules.asteroids.entities.world"
+
 
 local E = {}
 
@@ -14,7 +16,7 @@ function E.initialEntities(res)
 
   -- E.asteroidsGame(estore, res)
 
-  Ship.jig(estore, res, E)
+  Ship.workbench(estore, res)
 
   return estore
 end
@@ -23,11 +25,8 @@ function E.asteroidsGame(estore, res)
   -- E.game_state(estore, res)
   -- E.dev_state(estore, res)
 
-  local viewport = E.viewport(estore, res)
-  local world = viewport:newEntity({
-    { "name", { name = "world" } },
-  })
-  E.camera(world, res)
+
+  local world, viewport = W.basicWorldAndViewport(estore, res)
 
   -- E.physicsWorld(world, res)
   -- E.background(world, res)
@@ -74,33 +73,6 @@ function E.asteroidsGame(estore, res)
 
 
   -- E.addReloadButton(estore, res)
-end
-
-function E.viewport(parent, res)
-  local w, h = res.data.screen_size.width, res.data.screen_size.height
-  return parent:newEntity({
-    { 'name',     { name = 'viewport' } },
-    { 'viewport', {} }, -- camera will default to "camera"
-    { 'tr',       {} },
-    { 'box',      { w = w, h = h, debug = false } }
-  })
-end
-
-function E.camera(parent, res, name)
-  -- local w, h
-  -- if parent.box then
-  --   w, h = parent.box.w, parent.box.h
-  -- else
-  --   w, h = love.graphics.getDimensions()
-  -- end
-  if not name or name == "" then
-    name = "camera"
-  end
-  parent:newEntity({
-    { 'name', { name = name } },
-    -- { 'tr',   { x = w / 2, y = h / 2 } }
-    { 'tr',   { x = 0, y = 0 } }
-  })
 end
 
 -- function E.physicsWorld(estore, res)

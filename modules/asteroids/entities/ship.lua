@@ -1,37 +1,24 @@
+local W = require "modules.asteroids.entities.world"
+
 local Ship = {}
 
-
-function Ship.jig(parent, res, E)
-  local world = Ship.basicWorld(parent, res, E)
+function Ship.workbench(parent, res)
+  local world, viewport = W.basicWorldAndViewport(parent, res)
   world:newEntity({
-    { "tag",   { name = "jig_ship" } },
-    { "state", { name = "debug_draw", value = false } },
+    { "name",     { name = "ship_workbench" } },
+    { "state",    { name = "jig", value = "" } },
+    { "state",    { name = "debug_draw", value = false } },
+    { "keystate", { handle = { "1", "2", "3", "4", "5", "6" } } },
   })
-  Ship.dev_background(world, res, E)
-
-  Ship.ship(world, res, E)
-
-  -- Ship.flameMenu(parent, res, E)
 end
 
-function Ship.basicWorld(parent, res, E)
-  -- Default viewport (assumes default camera name "camera")
-  local viewport = E.viewport(parent, res)
-  -- world meant to be the direct child of viewport
-  local world = viewport:newEntity({
-    { "name", { name = "world" } },
-  })
-  -- camera is parented to world. (default name kept: "camera")
-  E.camera(world, res)
-
-  return world
-end
-
-function Ship.dev_background(parent, res, E)
+function Ship.dev_background(parent, res)
   local picId = "example_background"
   local picw, pich = 1000, 1000
   local offx, offy = -1500, -1500
-  local comps = {}
+  local comps = {
+    { "name", { name = "devbackground" } },
+  }
   for i = 0, 2 do
     local x = offx + (i * picw)
     for j = 0, 2 do
@@ -43,12 +30,11 @@ function Ship.dev_background(parent, res, E)
   return parent:newEntity(comps)
 end
 
-function Ship.ship(parent, res, E)
+function Ship.ship(parent, res)
   local ship = parent:newEntity({
-    { "tr",       {} },
-    { "name",     { name = "ship" } },
-    { "keystate", { handle = { "left", "right", "up", "down" } } },
-    { "vel",      {} },
+    { "tr",   {} },
+    { "name", { name = "ship" } },
+    { "vel",  {} },
   })
   ship:newEntity({
     { "tag", { name = "ship_flame" } },
@@ -79,12 +65,13 @@ function Ship.ship(parent, res, E)
       debug = false,
     } },
   })
+  return ship
 end
 
 Ship.Flames = { "ship_flame_01", "ship_flame_02", "ship_flame_03", "ship_flame_04", "ship_flame_05", "ship_flame_06",
   "ship_flame_07", "ship_flame_08", "ship_flame_09", "ship_flame_10", "ship_flame_11", }
 
-function Ship.flameMenu(parent, res, E)
+function Ship.flameMenu(parent, res)
   local w, h = res.data.screen_size.width, res.data.screen_size.height
 
   local initialSelected = 6
@@ -92,9 +79,12 @@ function Ship.flameMenu(parent, res, E)
     { "tr",       { x = 20, y = h - 80 } },
     { "name",     { name = "flame_menu" } },
     { "state",    { name = "selected", value = initialSelected } },
-    -- { "rect",  { w = 50 * 11, h = 70, color = { 0.5, 0.5, 1, 1 } } },
-    { "keystate", { handle = { "1", "j", "k" } } },
-
+    { "keystate", { handle = { "j", "k" } } },
+    { "label", {
+      text = "j,k: select flame | up,down: adjust flame",
+      color = { 1, 1, 1 },
+      y = -20,
+    } }
   })
   local size = 0.5
   local x, y = 0, 0
@@ -128,6 +118,7 @@ function Ship.flameMenu(parent, res, E)
     { "tr",   { x = (initialSelected - 1) * 50, } },
     { "rect", { w = 50, h = 70, color = { 1, 1, 1, 1 } } }
   })
+  return menu
 end
 
 return Ship

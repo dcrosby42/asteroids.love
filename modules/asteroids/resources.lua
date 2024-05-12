@@ -17,8 +17,8 @@ return {
           "castle.systems.touchbutton",
           "castle.systems.tween",
           "castle.systems.keystate",
-          "modules.asteroids.systems.devsystem",
-          "modules.asteroids.systems.jig_ship",
+          -- "modules.asteroids.systems.devsystem",
+          "modules.asteroids.systems.ship_workbench_system",
         }
       },
       drawSystems = {

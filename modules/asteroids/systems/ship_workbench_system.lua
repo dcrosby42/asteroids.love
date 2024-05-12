@@ -1,7 +1,7 @@
 local EventHelpers = require "castle.systems.eventhelpers"
 local State = require "castle.state"
-local E = require "modules.asteroids.entities"
 local Ship = require "modules.asteroids.entities.ship"
+local Vec = require 'vector-light'
 
 local min = math.min
 local sin = math.sin
@@ -9,7 +9,7 @@ local pi = math.pi
 local ZoomFactor = 0.2
 local RotFactor = math.pi / 8
 
-local match = hasTag("jig_ship")
+local matchWorkbench = hasTag("jig_ship")
 local matchShipFlame = hasTag("ship_flame")
 
 local function zoomCameraTo(camera, zoom)
@@ -27,32 +27,27 @@ local function zoomCameraOut(camera, factor)
   zoomCameraTo(camera, camera.tr.sx * (1 + factor))
 end
 
-local function controlCamera(jigE, estore, input, res)
+local function controlCamera(camera, estore, input, res)
   EventHelpers.handleKeyPresses(input.events, {
     ["="] = function(evt)
-      local camera = estore:getEntityByName("camera")
       zoomCameraIn(camera, ZoomFactor)
     end,
     ["-"] = function(evt)
-      local camera = estore:getEntityByName("camera")
       zoomCameraOut(camera, ZoomFactor)
     end,
     ["0"] = function(evt)
-      local camera = estore:getEntityByName("camera")
       zoomCameraTo(camera, 1)
       camera.tr.r = 0
     end,
     ["]"] = function(evt)
-      local camera = estore:getEntityByName("camera")
       camera.tr.r = camera.tr.r + RotFactor
     end,
     ["["] = function(evt)
-      local camera = estore:getEntityByName("camera")
       camera.tr.r = camera.tr.r - RotFactor
     end,
-    ["d"] = function(evt)
-      res.data.debug_draw = State.toggle(jigE, "debug_draw")
-    end,
+    -- ["d"] = function(evt)
+    --   res.data.debug_draw = State.toggle(workbenchE, "debug_draw")
+    -- end,
   })
 end
 
@@ -117,36 +112,8 @@ local function adjustFlamePosition(estore, input, res)
 end
 
 local function controlFlameMenu(estore, input, res)
-  local flameMenuE = estore:getEntityByName("flame_menu")
-  if flameMenuE then
-    adjustFlamePosition(estore, input, res)
-
-    local closeMenu = false
-    if flameMenuE.keystate.pressed.j then
-      incrementFlameMenuSelection(-1, estore)
-      local flamePicId = getFlameMenuValue(estore, input, res)
-      setShipFlamePic(flamePicId, estore)
-    end
-    if flameMenuE.keystate.pressed.k then
-      incrementFlameMenuSelection(1, estore)
-      local flamePicId = getFlameMenuValue(estore, input, res)
-      setShipFlamePic(flamePicId, estore)
-    end
-    if flameMenuE.keystate.pressed["1"] then
-      closeMenu = true
-    end
-    if closeMenu then
-      flameMenuE:destroy()
-    end
-  else
-    EventHelpers.onKeyPressed(input.events, "1", function()
-      -- "1" key: instantiate flame menu
-      Ship.flameMenu(estore, res, E)
-    end)
-  end
 end
 
-local Vec = require 'vector-light'
 local function controlShip(estore, input, res)
   local ship = estore:getEntityByName("ship")
   if not ship then return end
@@ -191,21 +158,129 @@ local function controlShip(estore, input, res)
   ship.tr.y = ship.tr.y + ship.vel.dy
 end
 
+-- local function controlJig(workbench, estore, input, res)
+-- end
 
-return function(estore, input, res)
+local JigSystems = {}
+
+function JigSystems.init_test_flight(parent, estore, input, res)
+  local jig = parent:newEntity({
+    { "name", { name = "test_flight" } },
+  })
+  Ship.dev_background(jig, res)
+  local ship = Ship.ship(jig, res)
+  ship:newComp("keystate", { handle = { "left", "right", "up", "down" } })
+end
+
+function JigSystems.test_flight(estore, input, res)
   controlShip(estore, input, res)
-
   -- Animate ship flame
   estore:seekEntity(matchShipFlame, function(flameE)
     flameE.pic.sy = 0.75 + sin(flameE.timer.t * 4 * pi * 2) * 0.1
     return true
   end)
+end
 
-  controlFlameMenu(estore, input, res)
+function JigSystems.init_flame_editor(parent, estore, input, res)
+  local jig = parent:newEntity({
+    { "name", { name = "flame_editor" } },
+  })
+  -- local world = Ship.basicWorld(jig, res, E)
+  Ship.dev_background(jig, res)
+  Ship.ship(jig, res)
 
-  -- Camera controls
-  estore:seekEntity(match, function(jigE)
-    controlCamera(jigE, estore, input, res)
-    return true
-  end)
+  local menu = Ship.flameMenu(estore, res)
+  jig:newComp("state", { name = "menu_eid", value = menu.eid })
+end
+
+function JigSystems.finalize_flame_editor(jigE, estore)
+  local menuEid = jigE.states.menu_eid.value
+  if menuEid then
+    local menu = estore:getEntity(menuEid)
+    if menu then
+      menu:destroy()
+    end
+  end
+end
+
+function JigSystems.flame_editor(estore, input, res)
+  local flameMenuE = estore:getEntityByName("flame_menu")
+  if flameMenuE then
+    adjustFlamePosition(estore, input, res)
+
+    local closeMenu = false
+    if flameMenuE.keystate.pressed.j then
+      incrementFlameMenuSelection(-1, estore)
+      local flamePicId = getFlameMenuValue(estore, input, res)
+      setShipFlamePic(flamePicId, estore)
+    end
+    if flameMenuE.keystate.pressed.k then
+      incrementFlameMenuSelection(1, estore)
+      local flamePicId = getFlameMenuValue(estore, input, res)
+      setShipFlamePic(flamePicId, estore)
+    end
+    if flameMenuE.keystate.pressed["1"] then
+      closeMenu = true
+    end
+    if closeMenu then
+      flameMenuE:destroy()
+    end
+  else
+    EventHelpers.onKeyPressed(input.events, "1", function()
+      -- "1" key: instantiate flame menu
+    end)
+  end
+end
+
+local JigSelectorMap = {
+  ["1"] = "flame_editor",
+  ["2"] = "test_flight",
+}
+
+return function(estore, input, res)
+  local workbench = estore:getEntityByName("ship_workbench")
+  if not workbench then return end
+
+  local jigName = workbench.states.jig.value
+
+  -- See if a jig selector was pushed
+  local jigSelected
+  for key, name in pairs(JigSelectorMap) do
+    if workbench.keystate.pressed[key] then
+      jigSelected = name
+    end
+  end
+  -- (if so) Switch away from current jig to new jig
+  if jigSelected then
+    local system = JigSystems[jigSelected]
+    local init = JigSystems["init_" .. jigSelected]
+    if system and init then
+      -- destroy current jig
+      local jig = estore:getEntityByName(jigName)
+      if jig then
+        local finalize = JigSystems["finalize_" .. jigName]
+        if finalize then
+          finalize(jig, estore)
+        end
+        jig:destroy()
+      end
+      -- create new jig entities(s)
+      init(workbench, estore, input, res)
+      -- Update the workbench's jig name
+      workbench.states.jig.value = jigSelected
+    end
+  end
+
+  -- Update the current jig
+  local system = JigSystems[workbench.states.jig.value]
+  if system then system(estore, input, res) end
+
+  -- Apply inputs to camera:
+  local camera = estore:getEntityByName("cam1")
+  if camera then
+    controlCamera(camera, estore, input, res)
+  end
+
+  -- controlJig(workbench, estore, input, res)
+  -- controlFlameMenu(estore, input, res)
 end
