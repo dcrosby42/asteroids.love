@@ -47,6 +47,7 @@ function Ship.ship(parent, res)
       sy = 0.75,
       cx = 0.5,
       cy = 0,
+      color = { 1, 1, 1, 0 },
     } },
     { "timer", {
       name = "flame",
@@ -90,6 +91,59 @@ function Ship.flameMenu(parent, res)
   local size = 0.5
   local x, y = 0, 0
   for i, picId in ipairs(Ship.Flames) do
+    x = (i - 1) * 50
+    menu:newEntity({
+      { "name", { name = "menu-" .. picId } },
+      { "tr",   { x = x, y = y } },
+      { 'pic', {
+        id = picId,
+        sx = size,
+        sy = size,
+        y = 20,
+        x = 50 / 2,
+        cx = 0.5,
+      } },
+      { "label", {
+        text = tostring(i),
+        color = { 1, 1, 1 },
+        align = "middle",
+        -- cx = 0.5,
+        -- y = -40,
+        w = 50,
+        h = 20,
+      } },
+    })
+  end
+
+  menu:newEntity({
+    { "name", { name = "menu_cursor" } },
+    { "tr",   { x = (initialSelected - 1) * 50, } },
+    { "rect", { w = 50, h = 70, color = { 1, 1, 1, 1 } } }
+  })
+  return menu
+end
+
+Ship.Bullets = map({ "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12" },
+  function(num) return "ship_bullets_" .. num end)
+
+function Ship.bulletMenu(parent, res)
+  local w, h = res.data.screen_size.width, res.data.screen_size.height
+
+  local initialSelected = 1
+  local menu = parent:newEntity({
+    { "tr",       { x = 20, y = h - 80 } },
+    { "name",     { name = "bullet_menu" } },
+    { "state",    { name = "selected", value = initialSelected } },
+    { "keystate", { handle = { "j", "k" } } },
+    { "label", {
+      text = "j,k: select flame | up,down,left,right: adjust position ",
+      color = { 1, 1, 1 },
+      y = -20,
+    } }
+  })
+  local size = 0.5
+  local x, y = 0, 0
+  for i, picId in ipairs(Ship.Bullets) do
     x = (i - 1) * 50
     menu:newEntity({
       { "name", { name = "menu-" .. picId } },

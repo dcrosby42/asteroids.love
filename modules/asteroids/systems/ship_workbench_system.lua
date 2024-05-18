@@ -11,29 +11,27 @@ local pi = math.pi
 local matchShipFlame = hasTag("ship_flame")
 
 
-local function getFlameMenuValue(estore, input, res)
-  local menu = estore:getEntityByName("flame_menu")
+local function getMenuChoice(menu, choices)
   local selected = State.get(menu, "selected")
-  local value = Ship.Flames[selected]
-  return value
+  return choices[selected]
 end
 
 local function setShipFlamePic(flamePicId, estore)
   estore:seekEntity(hasTag("ship_flame"), function(e)
     e.pic.id = flamePicId
+    return true
   end)
-  return true
 end
 
-local function incrementFlameMenuSelection(inc, estore)
-  local menu = estore:getEntityByName("flame_menu")
+local function incrementMenuSelection(menu, choices, inc, estore)
   local selected = State.get(menu, "selected")
   selected = selected + inc
   if selected < 1 then
-    selected = #Ship.Flames
-  elseif selected > #Ship.Flames then
+    selected = #choices
+  elseif selected > #choices then
     selected = 1
   end
+  print("menu selected " .. tostring(selected))
   State.set(menu, "selected", selected)
 
   local cursorE = estore:getEntityByName("menu_cursor")
@@ -107,7 +105,7 @@ end
 
 local JigSystems = {}
 
-function JigSystems.init_test_flight(parent, estore, input, res)
+function JigSystems.init_test_flight(parent, estore, res)
   local jig = parent:newEntity({
     { "name", { name = "test_flight" } },
   })
@@ -125,19 +123,25 @@ function JigSystems.test_flight(estore, input, res)
   end)
 end
 
-function JigSystems.init_flame_editor(parent, estore, input, res)
+function JigSystems.init_flame_editor(parent, estore, res)
   local jig = parent:newEntity({
     { "name", { name = "flame_editor" } },
   })
   -- local world = Ship.basicWorld(jig, res, E)
   Ship.dev_background(jig, res)
-  Ship.ship(jig, res)
+  local ship = Ship.ship(jig, res)
+  -- show ship flame: (it's there, but its alpha is 0)
+  estore:seekEntity(matchShipFlame, function(flameE)
+    flameE.pic.color[4] = 1
+    return true
+  end)
 
   local menu = Ship.flameMenu(estore, res)
   jig:newComp("state", { name = "menu_eid", value = menu.eid })
 end
 
 function JigSystems.finalize_flame_editor(jigE, estore)
+  -- since the menu is parented higher up in the estore, we have to find and kill it
   local menuEid = jigE.states.menu_eid.value
   if menuEid then
     local menu = estore:getEntity(menuEid)
@@ -148,77 +152,209 @@ function JigSystems.finalize_flame_editor(jigE, estore)
 end
 
 function JigSystems.flame_editor(estore, input, res)
-  local flameMenuE = estore:getEntityByName("flame_menu")
-  if flameMenuE then
+  local menu = estore:getEntityByName("flame_menu")
+  local choices = Ship.Flames
+  if menu then
     adjustFlamePosition(estore, input, res)
 
-    local closeMenu = false
-    if flameMenuE.keystate.pressed.j then
-      incrementFlameMenuSelection(-1, estore)
-      local flamePicId = getFlameMenuValue(estore, input, res)
-      setShipFlamePic(flamePicId, estore)
+    local changed = true
+    if menu.keystate.pressed.j then
+      incrementMenuSelection(menu, choices, -1, estore)
+      changed = true
     end
-    if flameMenuE.keystate.pressed.k then
-      incrementFlameMenuSelection(1, estore)
-      local flamePicId = getFlameMenuValue(estore, input, res)
-      setShipFlamePic(flamePicId, estore)
+    if menu.keystate.pressed.k then
+      incrementMenuSelection(menu, choices, 1, estore)
+      local picId = getMenuChoice(menu, choices)
+      setShipFlamePic(picId, estore)
     end
-    if flameMenuE.keystate.pressed["1"] then
-      closeMenu = true
+    if changed then
+      local picId = getMenuChoice(menu, choices)
+      setShipFlamePic(picId, estore)
     end
-    if closeMenu then
-      flameMenuE:destroy()
-    end
-  else
-    EventHelpers.onKeyPressed(input.events, "1", function()
-      -- "1" key: instantiate flame menu
+  end
+end
+
+--
+-- BULLET EDITOR
+--
+local function newShipBullet(ship, name, x, y)
+  local bulletE = ship:newEntity({
+    { "name", { name = name } },
+    { "tag",  { name = "ship_bullet" } },
+    { "tr",   { x = x, y = y } },
+    { 'pic', {
+      name = "bullet",
+      -- id = "ship_bullets_05",
+      id = "ship_bullets_04",
+      sx = 1,
+      sy = 1,
+      cx = 0.5,
+      cy = 0.5,
+    } },
+  })
+  return bulletE
+end
+
+
+local function setShipBulletPic(flamePicId, estore)
+  estore:walkEntities(hasTag("ship_bullet"), function(e)
+    e.pic.id = flamePicId
+  end)
+end
+
+local function adjustBulletSize(jig)
+  local change = 0
+  if jig.keystate.pressed[","] then
+    change = 0.9
+  elseif jig.keystate.pressed["."] then
+    change = 1.1
+  end
+  if change ~= 0 then
+    print(change)
+    jig:walkEntities(hasTag("ship_bullet"), function(e)
+      local s = e.pic.sx
+      s = s * change
+      e.pic.sx = s
+      e.pic.sy = s
+      print("bullet size" .. e.name.name .. " " .. tostring(e.pic.sx))
     end)
   end
 end
 
-local JigSelectorMap = {
-  ["1"] = "flame_editor",
-  ["2"] = "test_flight",
-}
+local function adjustBulletPositions(jig)
+  local dy = 0
+  local dx = 0
+  if jig.keystate.pressed.up then
+    dy = -1
+  end
+  if jig.keystate.pressed.down then
+    dy = 1
+  end
+  if jig.keystate.pressed.left then
+    dx = -1
+  end
+  if jig.keystate.pressed.right then
+    dx = 1
+  end
+  if dy ~= 0 or dx ~= 0 then
+    jig:walkEntities(hasTag("ship_bullet"), function(e)
+      local sign = 1
+      if e.name.name == "ship_bullet_left" then
+        sign = -1
+      end
+      e.tr.x = e.tr.x + (sign * dx)
+      e.tr.y = e.tr.y + dy
+      print("bullet " .. e.name.name .. " " .. tostring(e.tr.x) .. ", " .. tostring(e.tr.y))
+    end)
+  end
+end
 
-return function(estore, input, res)
-  local workbench = estore:getEntityByName("ship_workbench")
-  if not workbench then return end
+function JigSystems.init_bullet_editor(parent, estore, res)
+  local jig = parent:newEntity({
+    { "name",     { name = "bullet_editor" } },
+    { "keystate", { handle = { "up", "down", "left", "right", ",", "." } } },
+  })
+  Ship.dev_background(jig, res)
 
-  local jigName = workbench.states.jig.value
+  local ship = Ship.ship(jig, res)
+  newShipBullet(ship, "ship_bullet_left", -22, -9)
+  newShipBullet(ship, "ship_bullet_right", 22, -9)
 
-  -- See if a jig selector was pushed
-  local jigSelected
-  for key, name in pairs(JigSelectorMap) do
-    if workbench.keystate.pressed[key] then
-      jigSelected = name
+  local menu = Ship.bulletMenu(estore, res)
+  jig:newComp("state", { name = "menu_eid", value = menu.eid })
+end
+
+function JigSystems.finalize_bullet_editor(jigE, estore)
+  -- since the menu is parented higher up in the estore, we have to find and kill it
+  local menuEid = jigE.states.menu_eid.value
+  if menuEid then
+    local menu = estore:getEntity(menuEid)
+    if menu then
+      menu:destroy()
     end
   end
-  -- (if so) Switch away from current jig to new jig
-  if jigSelected then
-    local system = JigSystems[jigSelected]
-    local init = JigSystems["init_" .. jigSelected]
-    if system and init then
+end
+
+function JigSystems.bullet_editor(estore, input, res)
+  local jig = estore:getEntityByName("bullet_editor")
+  adjustBulletPositions(jig)
+  adjustBulletSize(jig)
+
+  local menu = estore:getEntityByName("bullet_menu")
+  local choices = Ship.Bullets
+  -- print("gm")
+  if menu then
+    local changed = false
+    if menu.keystate.pressed.j then
+      incrementMenuSelection(menu, choices, -1, estore)
+      changed = true
+    end
+    if menu.keystate.pressed.k then
+      incrementMenuSelection(menu, choices, 1, estore)
+      changed = true
+    end
+    if changed then
+      local picId = getMenuChoice(menu, choices)
+      setShipBulletPic(picId, estore)
+    end
+  end
+end
+
+-- map of kbd presses to jigs:
+local JigSelectorMap = {
+  ["1"] = "test_flight",
+  ["2"] = "bullet_editor",
+  ["3"] = "flame_editor",
+}
+-- local DefaultJigName = "test_flight"
+local DefaultJigName = "bullet_editor"
+
+local function transitionToJig(jigName, workbench, estore, res)
+  local currentJigName = workbench.states.jig.value
+  local system = JigSystems[jigName]
+  local init = JigSystems["init_" .. jigName]
+  if system and init then
+    if currentJigName then
       -- destroy current jig
-      local jig = estore:getEntityByName(jigName)
+      local jig = estore:getEntityByName(currentJigName)
       if jig then
-        local finalize = JigSystems["finalize_" .. jigName]
+        local finalize = JigSystems["finalize_" .. currentJigName]
         if finalize then
           finalize(jig, estore)
         end
         jig:destroy()
       end
-      -- create new jig entities(s)
-      init(workbench, estore, input, res)
-      -- Update the workbench's jig name
-      workbench.states.jig.value = jigSelected
+    end
+    -- create new jig entities(s)
+    init(workbench, estore, res)
+    -- Update the workbench's jig name
+    workbench.states.jig.value = jigName
+  end
+end
+
+return function(estore, input, res)
+  local workbench = estore:getEntityByName("ship_workbench")
+  if not workbench then return end
+
+  local currentJigName = workbench.states.jig.value
+  if not currentJigName or currentJigName == "" then
+    -- Create default jig
+    transitionToJig(DefaultJigName, workbench, estore, res)
+  else
+    -- See if a jig selector was pushed
+    local jigSelected
+    for key, name in pairs(JigSelectorMap) do
+      if workbench.keystate.pressed[key] then
+        jigSelected = name
+      end
+    end
+    -- (if so) Switch away from current jig to new jig
+    if jigSelected then
+      transitionToJig(jigSelected, workbench, estore, res)
     end
   end
 
   -- Update the current jig
   local system = JigSystems[workbench.states.jig.value]
   if system then system(estore, input, res) end
-
-  -- controlJig(workbench, estore, input, res)
-  -- controlFlameMenu(estore, input, res)
 end
