@@ -82,7 +82,7 @@ Comp.define('tween', {
   'timer', '',
   'easing', 'linear',
   'finished', false,
-  'killtimer', false,
+  'killtimer', true,
 })
 
 --

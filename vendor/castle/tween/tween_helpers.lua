@@ -3,10 +3,23 @@
 local H = {}
 
 function H.addTweens(e, timerName, compProps, opts)
+  -- proccess options
   opts = opts or {}
   local duration = opts.duration or 1
-  local killtimer = opts.killtimer == true
   local easing = opts.easing or "linear"
+  local existingTimer = e.timers and e.timers[timerName]
+
+  -- if timer exists already, clear it and associated tweens out of the way.
+  if existingTimer then
+    e:removeComp(existingTimer)
+    if e.tweens then
+      for _, tween in pairs(e.tweens) do
+        if tween.timer == timerName then
+          e:removeComp(tween)
+        end
+      end
+    end
+  end
   e:newComp("timer", { name = timerName, countDown = false })
   for cname, cprops in pairs(compProps) do
     local comp = e[cname]
@@ -20,7 +33,6 @@ function H.addTweens(e, timerName, compProps, opts)
           timer = timerName,
           duration = duration,
           easing = easing,
-          killtimer = killtimer,
         })
       end
     end

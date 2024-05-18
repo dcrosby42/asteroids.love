@@ -1,4 +1,5 @@
 local EventHelpers = require "castle.systems.eventhelpers"
+local TweenHelpers = require "castle.tween.tween_helpers"
 local State = require "castle.state"
 local Ship = require "modules.asteroids.entities.ship"
 local Vec = require 'vector-light'
@@ -12,9 +13,18 @@ local RotFactor = math.pi / 8
 local matchWorkbench = hasTag("jig_ship")
 local matchShipFlame = hasTag("ship_flame")
 
+
+local function tweenit(e, compProps, timerName)
+  TweenHelpers.addTweens(e, timerName, compProps, {
+    duration = 0.5,
+    easing = "outQuint",
+  })
+end
+
 local function zoomCameraTo(camera, zoom)
-  camera.tr.sx = zoom
-  camera.tr.sy = zoom
+  tweenit(camera, { tr = { sx = zoom, sy = zoom } }, "zoom")
+  -- camera.tr.sx = zoom
+  -- camera.tr.sy = zoom
 end
 
 local function zoomCameraIn(camera, factor)
@@ -27,6 +37,15 @@ local function zoomCameraOut(camera, factor)
   zoomCameraTo(camera, camera.tr.sx * (1 + factor))
 end
 
+local function rotateCameraTo(camera, rot)
+  tweenit(camera, { tr = { r = rot } }, "tr.r")
+end
+
+local function rotateCameraBy(camera, rot)
+  local r = camera.tr.r + rot
+  rotateCameraTo(camera, r)
+end
+
 local function controlCamera(camera, estore, input, res)
   EventHelpers.handleKeyPresses(input.events, {
     ["="] = function(evt)
@@ -37,17 +56,14 @@ local function controlCamera(camera, estore, input, res)
     end,
     ["0"] = function(evt)
       zoomCameraTo(camera, 1)
-      camera.tr.r = 0
+      rotateCameraTo(camera, 0)
     end,
     ["]"] = function(evt)
-      camera.tr.r = camera.tr.r + RotFactor
+      rotateCameraBy(camera, -RotFactor)
     end,
     ["["] = function(evt)
-      camera.tr.r = camera.tr.r - RotFactor
+      rotateCameraBy(camera, RotFactor)
     end,
-    -- ["d"] = function(evt)
-    --   res.data.debug_draw = State.toggle(workbenchE, "debug_draw")
-    -- end,
   })
 end
 

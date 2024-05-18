@@ -54,7 +54,7 @@ end
 local function removeTween(e, tween)
   if tween.killtimer then
     -- Remove the associated timer component by name, if present
-    local timer = e.timers[tween.timer]
+    local timer = e.timers and e.timers[tween.timer]
     if timer then
       e:removeComp(timer)
     end
