@@ -4,6 +4,7 @@ local Ship = {}
 
 function Ship.workbench(parent, res)
   local world, viewport = W.basicWorldAndViewport(parent, res)
+  W.camera_dev_controller(parent, res, viewport.viewport.camera)
   world:newEntity({
     { "name",     { name = "ship_workbench" } },
     { "state",    { name = "jig", value = "" } },

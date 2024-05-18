@@ -29,4 +29,13 @@ function W.camera(parent, res, name)
   })
 end
 
+function W.camera_dev_controller(parent, res, name)
+  parent:newEntity({
+    { 'name',     { name = name .. "_dev_controller" } },
+    { 'tag',      { name = "camera_dev_controller" } },
+    { "state",    { name = "camera", value = name } },
+    { "keystate", { handle = { "[", "]", "-", "=", "0" } } },
+  })
+end
+
 return W

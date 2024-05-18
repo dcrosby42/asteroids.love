@@ -19,6 +19,7 @@ return {
           "castle.systems.keystate",
           -- "modules.asteroids.systems.devsystem",
           "modules.asteroids.systems.ship_workbench_system",
+          "modules.asteroids.systems.camera_dev_system",
         }
       },
       drawSystems = {

@@ -7,75 +7,9 @@ local Vec = require 'vector-light'
 local min = math.min
 local sin = math.sin
 local pi = math.pi
-local ZoomFactor = 0.2
-local RotFactor = math.pi / 8
 
-local matchWorkbench = hasTag("jig_ship")
 local matchShipFlame = hasTag("ship_flame")
 
-
-local function tweenit(e, compProps, timerName)
-  TweenHelpers.addTweens(e, timerName, compProps, {
-    duration = 0.5,
-    easing = "outQuint",
-  })
-end
-
-local function zoomCameraTo(camera, zoom)
-  tweenit(camera, { tr = { sx = zoom, sy = zoom } }, "zoom")
-  -- camera.tr.sx = zoom
-  -- camera.tr.sy = zoom
-end
-
-local function zoomCameraIn(camera, factor)
-  -- Zooming camera IN means SHRINKING sx,sy
-  zoomCameraTo(camera, camera.tr.sx * (1 - factor))
-end
-
-local function zoomCameraOut(camera, factor)
-  -- Zooming camera OUT means GROWING sx,sy
-  zoomCameraTo(camera, camera.tr.sx * (1 + factor))
-end
-
-local function rotateCameraTo(camera, rot)
-  tweenit(camera, { tr = { r = rot } }, "tr.r")
-end
-
-local function rotateCameraBy(camera, rot)
-  local r = camera.tr.r + rot
-  rotateCameraTo(camera, r)
-end
-
-local function controlCamera(camera, estore, input, res)
-  EventHelpers.handleKeyPresses(input.events, {
-    ["="] = function(evt)
-      zoomCameraIn(camera, ZoomFactor)
-    end,
-    ["-"] = function(evt)
-      zoomCameraOut(camera, ZoomFactor)
-    end,
-    ["0"] = function(evt)
-      zoomCameraTo(camera, 1)
-      rotateCameraTo(camera, 0)
-    end,
-    ["]"] = function(evt)
-      rotateCameraBy(camera, -RotFactor)
-    end,
-    ["["] = function(evt)
-      rotateCameraBy(camera, RotFactor)
-    end,
-  })
-end
-
-
-
--- selectFlameInMenu(estore, input, res)
--- local flamePicId = getFlameMenuValue(estore, input, res)
--- setShipFlamePic(flamePicId, estore)
-local function selectFlameInMenu(num, estore, input, res)
-  local menu = estore:getEntityByName("flame_menu")
-  State.set(menu, "selected", num)
-end
 
 local function getFlameMenuValue(estore, input, res)
   local menu = estore:getEntityByName("flame_menu")
@@ -127,9 +61,6 @@ local function adjustFlamePosition(estore, input, res)
   })
 end
 
-local function controlFlameMenu(estore, input, res)
-end
-
 local function controlShip(estore, input, res)
   local ship = estore:getEntityByName("ship")
   if not ship then return end
@@ -173,9 +104,6 @@ local function controlShip(estore, input, res)
   ship.tr.x = ship.tr.x + ship.vel.dx
   ship.tr.y = ship.tr.y + ship.vel.dy
 end
-
--- local function controlJig(workbench, estore, input, res)
--- end
 
 local JigSystems = {}
 
@@ -290,12 +218,6 @@ return function(estore, input, res)
   -- Update the current jig
   local system = JigSystems[workbench.states.jig.value]
   if system then system(estore, input, res) end
-
-  -- Apply inputs to camera:
-  local camera = estore:getEntityByName("cam1")
-  if camera then
-    controlCamera(camera, estore, input, res)
-  end
 
   -- controlJig(workbench, estore, input, res)
   -- controlFlameMenu(estore, input, res)
