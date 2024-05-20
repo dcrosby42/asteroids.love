@@ -1,4 +1,5 @@
 local W = require "modules.asteroids.entities.world"
+local Vec = require 'vector-light'
 
 local Ship = {}
 
@@ -38,6 +39,16 @@ function Ship.ship(parent, res)
     { "vel",  {} },
   })
   ship:newEntity({
+    { "tag", { name = "gun_muzzle" } },
+    { "tag", { name = "gun_muzzle_left" } },
+    { "tr",  { x = -22, y = -9 } },
+  })
+  ship:newEntity({
+    { "tag", { name = "gun_muzzle" } },
+    { "tag", { name = "gun_muzzle_right" } },
+    { "tr",  { x = 22, y = -9 } },
+  })
+  ship:newEntity({
     { "tag", { name = "ship_flame" } },
     { "tr",  { y = 30 } },
     { 'pic', {
@@ -68,6 +79,44 @@ function Ship.ship(parent, res)
     } },
   })
   return ship
+end
+
+local function transformToLocAndDir(transf)
+  local x, y = transf:transformPoint(0, 0) -- firing point relative to space ship exists in
+  local mrx, mry = transf:transformPoint(0, 1)
+  local dirx, diry = mrx - x, mry - y
+  local r = Vec.angleTo(dirx, diry, 0, 1)
+  return x, y, r, dirx, diry
+end
+
+-- Create a new ship bullet entity with location and angle based on
+-- the location of the muzzle indicated by `side`.
+-- Assumes the ship has a child entity named "gun_muzzle_{side}"
+function Ship.fireBullet(ship, side, bulletPicId, bulletSpeed)
+  local parent = ship:getParent() -- intended parent of new bullet
+  local name = "ship_bullet_" .. side
+  local bulletE
+  ship:seekEntity(hasTag("gun_muzzle_" .. side), function(muzzle)
+    local muzzleTx = computeEntityTransform(muzzle, parent)
+    local x, y, r, dirx, diry = transformToLocAndDir(muzzleTx)
+    local velx, vely = Vec.mul(bulletSpeed, dirx, diry)
+
+    bulletE = parent:newEntity({
+      { "name", { name = name } },
+      { "tag",  { name = "ship_bullet" } },
+      { "tr",   { x = x, y = y, r = r } },
+      { "vel",  { dx = velx, dy = vely } },
+      { 'pic', {
+        name = "bullet",
+        id = bulletPicId,
+        sx = 1,
+        sy = 1,
+        cx = 0.5,
+        cy = 0.5,
+      } },
+    })
+  end)
+  return bulletE
 end
 
 Ship.Flames = { "ship_flame_01", "ship_flame_02", "ship_flame_03", "ship_flame_04", "ship_flame_05", "ship_flame_06",

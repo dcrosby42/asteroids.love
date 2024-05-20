@@ -270,31 +270,30 @@ end
 
 -- Compute the love2d Transform for the given entity by accumulating transformations
 -- from the scene root down through the entity.
-function computeEntityTransform(e)
+-- Optional: an entities transform can be computed relative to an ancestor entity
+function computeEntityTransform(e, relativeToEnt)
   if e == nil or e.eid == nil then
     -- _root node in estore has no eid nor transform, must stop here
+    return love.math.newTransform()
+  end
+  if relativeToEnt and e.eid == relativeToEnt.eid then
+    -- computation halts at specified ancestor entity, when given
     return love.math.newTransform()
   end
 
   -- Compute a love2d Transform for the entity based on its tr component.
   -- The transform is recursively derived up to the root ancestor entity.
-  local transform = computeEntityTransform(e:getParent())
+  local transform = computeEntityTransform(e:getParent(), relativeToEnt)
   if e.tr then
     transform:apply(trToTransform(e.tr))
   end
   if e.viewport then
+    -- Viewports, in addition to their own transform, apply further transformation
+    -- based on their cameras (when they have cameras)
     local camE = e:getEstore():getEntityByName(e.viewport.camera)
     transform:apply(viewportCameraTransform(e, camE))
-    -- if camE and camE.tr then
-    --   local camTransf = love.math.newTransform(e.box.w / 2 - camE.tr.x, e.box.h / 2 - camE.tr.y, -camE.tr.r, 1, 1)
-    --   transform:apply(camTransf)
-    -- end
   end
   return transform
-end
-
-function computeEntityScaleAndRot(e)
-  local xform = computeEntityTransform(e)
 end
 
 -- Given a screen-space coordinate pair, return the entity-relative transformed point.

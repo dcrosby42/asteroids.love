@@ -87,6 +87,10 @@ local function controlShip(estore, input, res)
       ship.vel.dy = min(ship.vel.dy + dy)
     end
   end
+  if ship.keystate.pressed.space then
+    Ship.fireBullet(ship, "left", "ship_bullets_04", -1500)
+    Ship.fireBullet(ship, "right", "ship_bullets_04", -1500)
+  end
 
   -- Show ship flame only when thrust active
   estore:seekEntity(matchShipFlame, function(flameE)
@@ -98,9 +102,16 @@ local function controlShip(estore, input, res)
     return true
   end)
 
-  -- Apply velocity to get motion
+  -- (testing: motion should be a different system) Apply velocity to get motion
   ship.tr.x = ship.tr.x + ship.vel.dx
   ship.tr.y = ship.tr.y + ship.vel.dy
+end
+
+local function controlShipBullets(estore, input, res)
+  estore:walkEntities(allOf(hasTag("ship_bullet"), hasComps("tr", "vel")), function(e)
+    e.tr.x = e.tr.x + (e.vel.dx * input.dt)
+    e.tr.y = e.tr.y + (e.vel.dy * input.dt)
+  end)
 end
 
 local JigSystems = {}
@@ -108,14 +119,16 @@ local JigSystems = {}
 function JigSystems.init_test_flight(parent, estore, res)
   local jig = parent:newEntity({
     { "name", { name = "test_flight" } },
+    { "tag",  { name = "jig" } },
   })
   Ship.dev_background(jig, res)
   local ship = Ship.ship(jig, res)
-  ship:newComp("keystate", { handle = { "left", "right", "up", "down" } })
+  ship:newComp("keystate", { handle = { "left", "right", "up", "down", "space" } })
 end
 
 function JigSystems.test_flight(estore, input, res)
   controlShip(estore, input, res)
+  controlShipBullets(estore, input, res)
   -- Animate ship flame
   estore:seekEntity(matchShipFlame, function(flameE)
     flameE.pic.sy = 0.75 + sin(flameE.timer.t * 4 * pi * 2) * 0.1
@@ -177,24 +190,6 @@ end
 --
 -- BULLET EDITOR
 --
-local function newShipBullet(ship, name, x, y)
-  local bulletE = ship:newEntity({
-    { "name", { name = name } },
-    { "tag",  { name = "ship_bullet" } },
-    { "tr",   { x = x, y = y } },
-    { 'pic', {
-      name = "bullet",
-      -- id = "ship_bullets_05",
-      id = "ship_bullets_04",
-      sx = 1,
-      sy = 1,
-      cx = 0.5,
-      cy = 0.5,
-    } },
-  })
-  return bulletE
-end
-
 
 local function setShipBulletPic(flamePicId, estore)
   estore:walkEntities(hasTag("ship_bullet"), function(e)
@@ -257,8 +252,8 @@ function JigSystems.init_bullet_editor(parent, estore, res)
   Ship.dev_background(jig, res)
 
   local ship = Ship.ship(jig, res)
-  newShipBullet(ship, "ship_bullet_left", -22, -9)
-  newShipBullet(ship, "ship_bullet_right", 22, -9)
+  Ship.fireBullet(ship, "left", "ship_bullets_04", -1500)
+  Ship.fireBullet(ship, "right", "ship_bullets_04", -1500)
 
   local menu = Ship.bulletMenu(estore, res)
   jig:newComp("state", { name = "menu_eid", value = menu.eid })
@@ -306,8 +301,8 @@ local JigSelectorMap = {
   ["2"] = "bullet_editor",
   ["3"] = "flame_editor",
 }
--- local DefaultJigName = "test_flight"
-local DefaultJigName = "bullet_editor"
+local DefaultJigName = "test_flight"
+-- local DefaultJigName = "bullet_editor"
 
 local function transitionToJig(jigName, workbench, estore, res)
   local currentJigName = workbench.states.jig.value
