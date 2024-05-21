@@ -53,23 +53,23 @@ function E.asteroidsGame(estore, res)
   --   } }
   -- })
 
-  world:newEntity({
-    { "name", { name = "roid2" } },
-    { 'tr',   { x = 400, y = 100, } },
-    { 'pic', {
-      id = "roid_medium_grey_a1",
-      -- id = "roid_large_grey_a1",
-      -- x = -100,
-      -- y = -50,
-      cx = 0.5,
-      cy = 0.5,
-      -- sx = 0.5,
-      -- sy = 0.5,
-      -- r = math.pi / 4,
-      debug = false,
-    } },
-    { 'timer', { countDown = false, } }
-  })
+  -- world:newEntity({
+  --   { "name", { name = "roid2" } },
+  --   { 'tr',   { x = 0, y = 0, } },
+  --   { 'pic', {
+  --     -- id = "roid_medium_grey_a1",
+  --     id = "roid_large_grey_a1",
+  --     -- x = -100,
+  --     -- y = -50,
+  --     cx = 0.5,
+  --     cy = 0.5,
+  --     -- sx = 0.5,
+  --     -- sy = 0.5,
+  --     -- r = math.pi / 4,
+  --     debug = false,
+  --   } },
+  --   { 'timer', { countDown = false, } }
+  -- })
 
 
   -- E.addReloadButton(estore, res)

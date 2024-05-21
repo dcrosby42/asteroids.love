@@ -39,4 +39,11 @@ function H.addTweens(e, timerName, compProps, opts)
   end
 end
 
+function H.tweenit(e, name, compProps, opts)
+  opts = opts or {}
+  opts.duration = opts.duration or 0.5
+  opts.easing = opts.easing or "outQuint"
+  H.addTweens(e, name, compProps, opts)
+end
+
 return H
