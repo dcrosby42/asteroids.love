@@ -199,6 +199,12 @@ function ResourceSet:get(name)
   return self[name]
 end
 
+function ResourceSet:alias(from, to)
+  assert(self[to], "No key '" .. to .. "' in ResourceSet.")
+  self[from] = self[to]
+  return self[from]
+end
+
 local ResourceRoot = {}
 
 function ResourceRoot:new()
@@ -306,6 +312,18 @@ function Loaders.pic(res, picConfig)
   end
   local pic = R.makePic(data.path, nil, data.rect, { sx = data.sx, sy = data.sy })
   res:get('pics'):put(picConfig.name, pic)
+end
+
+-- Adds aliases for pics.
+-- Aliased pics must already be loaded!
+-- name (unused)
+-- data: map of aliasId-to-picId
+function Loaders.picaliases(res, aliasesConfig)
+  local data = Loaders.getData(aliasesConfig)
+  local pics = res:get('pics')
+  for aliasId, picId in pairs(data) do
+    pics:alias(aliasId, picId)
+  end
 end
 
 -- animConfig:
