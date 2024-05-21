@@ -44,6 +44,10 @@ return {
   },
   {
     type = "resource_file",
+    file = "modules/asteroids/images/roidaliases.res.lua",
+  },
+  {
+    type = "resource_file",
     file = "modules/asteroids/images/ships/ship_pics.res.lua",
   },
   {
