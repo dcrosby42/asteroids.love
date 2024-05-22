@@ -95,6 +95,8 @@ function tcopydeep(orig)
   return copy
 end
 
+deepclone = tcopydeep
+
 function tkeys(t)
   local keys = {}
   local n = 0
