@@ -10,10 +10,7 @@ local TestFlightJig = {}
 local matchShipFlame = hasTag("ship_flame")
 
 
-local function controlShip(estore, input, res)
-  local ship = estore:getEntityByName("ship")
-  if not ship then return end
-
+local function controlShip(ship, estore, input, res)
   local spinSpeed = pi * 1.5
 
   -- Control direction and thrust
@@ -79,13 +76,20 @@ function TestFlightJig.init(parent, estore, res)
 end
 
 function TestFlightJig.update(estore, input, res)
-  controlShip(estore, input, res)
+  local ship = estore:getEntityByName("ship")
+  controlShip(ship, estore, input, res)
   controlShipBullets(estore, input, res)
   -- Animate ship flame
   estore:seekEntity(matchShipFlame, function(flameE)
     flameE.pic.sy = 0.75 + sin(flameE.timer.t * 4 * pi * 2) * 0.1
     return true
   end)
+
+  local camera = estore:getEntityByName("cam1")
+  if camera then
+    camera.tr.x = ship.tr.x
+    camera.tr.y = ship.tr.y
+  end
 end
 
 return TestFlightJig

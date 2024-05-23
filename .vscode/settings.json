@@ -1,8 +1,9 @@
 {
   "Lua.diagnostics.globals": [
     "love"
- ],
- "editor.detectIndentation": false,
- "editor.tabSize": 2,
- "editor.formatOnSave": true,
+  ],
+  "editor.detectIndentation": false,
+  "editor.tabSize": 2,
+  "editor.formatOnSave": true,
+  "cmake.configureOnOpen": false,
 }

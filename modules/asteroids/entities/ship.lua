@@ -21,6 +21,7 @@ function Ship.dev_background(parent, res)
   local comps = {
     { "name", { name = "devbackground" } },
   }
+  -- tile-in a few copies of the bg image
   for i = 0, 2 do
     local x = offx + (i * picw)
     for j = 0, 2 do
