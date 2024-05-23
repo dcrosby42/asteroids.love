@@ -51,9 +51,8 @@ return {
     file = "modules/asteroids/images/ships/ship_pics.res.lua",
   },
   {
-    type = "pic",
-    name = "example_background",
-    data = { path = "modules/asteroids/images/example_background.png" },
+    type = "resource_file",
+    file = "modules/asteroids/images/bg/backgrounds.res.lua",
   },
   -- {
   --   type = "sound",

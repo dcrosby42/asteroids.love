@@ -66,14 +66,14 @@ return function(estore, res)
         end
         -- Viewports with NO box, or with box but NO stenciling:
         withViewportCameraTransform(e, camE, continue)
-        drawEntity(e, res)
+        drawEntity(e, res) -- viewports likely only have a box, if anything, to draw
       end
       if e.tr then
         -- The viewport itself, like any drawable, has a transform:
         withTransform(e.tr.x, e.tr.y, e.tr.r, 0, 0, e.tr.sx, e.tr.sy, drawViewport)
       else
         -- just render it
-        drawViewport()
+        drawViewport() -- viewports likely only have a box, if anything, to draw
       end
     elseif e.tr then
       --

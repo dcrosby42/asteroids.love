@@ -33,6 +33,46 @@ function Ship.dev_background(parent, res)
   return parent:newEntity(comps)
 end
 
+function Ship.dev_background_starfield5(parent, res)
+  local picId = "starfield_5"
+  local picw, pich = 1024, 1024
+  local offx, offy = -(2 * picw), -(2 * pich)
+  local comps = {
+    { "name", { name = "background" } },
+  }
+  -- tile-in a few copies of the bg image
+  for i = 0, 2 do
+    local x = offx + (i * picw)
+    for j = 0, 2 do
+      local y = offy + (j * pich)
+      local cmp = { "pic", { id = picId, x = x, y = y } }
+      comps[#comps + 1] = cmp
+    end
+  end
+  return parent:newEntity(comps)
+end
+
+function Ship.dev_background_starfield1(parent, res)
+  local picId = "starfield_1"
+  local picw, pich = 1024, 1024
+  local offx, offy = -(2 * picw), -(2 * pich)
+  local comps = {
+    { "name",    { name = "background" } },
+    { "tr",      {} },
+    { "paralax", { x = 0.5, y = 0.5 } },
+  }
+  -- tile-in a few copies of the bg image
+  for i = 0, 2 do
+    local x = offx + (i * picw)
+    for j = 0, 2 do
+      local y = offy + (j * pich)
+      local cmp = { "pic", { id = picId, x = x, y = y } }
+      comps[#comps + 1] = cmp
+    end
+  end
+  return parent:newEntity(comps)
+end
+
 function Ship.ship(parent, res)
   local ship = parent:newEntity({
     { "tr",   {} },
