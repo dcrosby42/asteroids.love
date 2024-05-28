@@ -70,7 +70,8 @@ function TestFlightJig.init(parent, estore, res)
     { "name", { name = "test_flight" } },
     { "tag",  { name = "jig" } },
   })
-  Ship.dev_background_starfield5(jig, res)
+  Ship.dev_background_nebula_blue(jig, res)
+  Ship.dev_background_starfield1(jig, res)
   local ship = Ship.ship(jig, res)
   ship:newComp("keystate", { handle = { "left", "right", "up", "down", "space" } })
 end

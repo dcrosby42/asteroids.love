@@ -33,12 +33,12 @@ function Ship.dev_background(parent, res)
   return parent:newEntity(comps)
 end
 
-function Ship.dev_background_starfield5(parent, res)
-  local picId = "starfield_5"
-  local picw, pich = 1024, 1024
+function Ship.dev_background_nebula_blue(parent, res)
+  local picId = "nebula_blue"
+  local picw, pich = 4096, 4096
   local offx, offy = -(2 * picw), -(2 * pich)
   local comps = {
-    { "name", { name = "background" } },
+    { "name", { name = "background_nebula" } },
   }
   -- tile-in a few copies of the bg image
   for i = 0, 2 do
@@ -54,12 +54,12 @@ end
 
 function Ship.dev_background_starfield1(parent, res)
   local picId = "starfield_1"
-  local picw, pich = 1024, 1024
+  local picw, pich = 4096, 4096
   local offx, offy = -(2 * picw), -(2 * pich)
   local comps = {
-    { "name",    { name = "background" } },
-    { "tr",      {} },
-    { "paralax", { x = 0.5, y = 0.5 } },
+    { "name", { name = "background_starfield_1" } },
+    { "tr",   {} },
+    -- { "paralax", { x = 0.5, y = 0.5 } },
   }
   -- tile-in a few copies of the bg image
   for i = 0, 2 do
