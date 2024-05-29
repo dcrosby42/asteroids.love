@@ -39,6 +39,53 @@ local function withViewportCameraTransform(vpE, camE, callback)
   love.graphics.pop()
 end
 
+local function findOwningViewportCam(e, estore)
+  if not e then
+    return nil
+  elseif e.viewport then
+    local camName = e.viewport.camera
+    if camName then
+      return estore:getEntityByName(camName)
+    end
+    return nil
+  else
+    return findOwningViewportCam(e:getParent(), estore)
+  end
+end
+
+-- Compute the DRAWABLE location x,y of an entity based on its tr comp,
+-- accounting for paralax factors parax,paray (if non-1).
+-- Paralax is computed relative to the current location of the camera as determined
+-- by the given entity's ancestor viewport, assuming both viewport and camera exist.
+-- The x,y offset incurred by paralax is ONLY applied at draw-time, and
+-- will affect the drawing of child drawable entities.
+--
+-- YIKES this ain't great (but it's a start):
+--   - If e has an ancestor entity with a viewport component
+--   - If the camera entity named by the viewport exists
+--   - Assumes the camera's location and the entity's location are "in the same
+--     context", ie, at the same scale and offset.
+--   - ...offset is computed based on the camera's distance from the entity.
+--      - If the camera is interestingly transformed and/or parented, this calc will generate unexpected results.
+--      - ...What about multiple renderings from multiple viewports/cams? (this isn't a thing yet... requires indirect viewport.world referencing)
+local function computeLocWithParalax(e, estore)
+  if not e.tr then return 0, 0 end
+  local x, y = e.tr.x, e.tr.y
+  if e.tr.parax ~= 1 or e.tr.paray ~= 1 then
+    local camera = findOwningViewportCam(e, estore)
+    if camera then
+      local dx = camera.tr.x - e.tr.x
+      local dy = camera.tr.y - e.tr.y
+      local ax = dx * e.tr.parax
+      local ay = dy * e.tr.paray
+      x = x + ax
+      y = y + ay
+    end
+  end
+  return x, y
+end
+
+
 -- Walk the Entity hierarchy and apply drawing functions.
 -- Entities with tr components will have their transforms applied as
 -- their children are drawn.
@@ -79,7 +126,8 @@ return function(estore, res)
       --
       -- Entity with transformation
       --
-      withTransform(e.tr.x, e.tr.y, e.tr.r, 0, 0, e.tr.sx, e.tr.sy, function()
+      local x, y = computeLocWithParalax(e, estore)
+      withTransform(x, y, e.tr.r, 0, 0, e.tr.sx, e.tr.sy, function()
         drawEntity(e, res)
         continue()
       end)

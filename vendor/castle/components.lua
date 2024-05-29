@@ -2,7 +2,7 @@ local Comp = require 'castle.ecs.component'
 
 local ext = appendlist
 
-local TrAttrs = { 'x', 0, 'y', 0, 'r', 0, 'sx', 1, 'sy', 1 }
+local TrAttrs = { 'x', 0, 'y', 0, 'r', 0, 'sx', 1, 'sy', 1, 'parax', 1, 'paray', 1 }
 local RectAttrs = { 'x', 0, 'y', 0, 'w', 0, 'h', 0, 'cx', 0, 'cy', 0 } -- sx,sy?
 -- local SizeAttrs = { 'w', 0, 'h', 0, 'cx', 0, 'cy', 0 }
 local PicAttrs = ext(TrAttrs, { 'id', 'UNSET', 'cx', 0, 'cy', 0, 'color', { 1, 1, 1, 1 },

@@ -39,6 +39,7 @@ function Ship.dev_background_nebula_blue(parent, res)
   local offx, offy = -(2 * picw), -(2 * pich)
   local comps = {
     { "name", { name = "background_nebula" } },
+    { "tr",   { parax = 0.5, paray = 0.5 } },
   }
   -- tile-in a few copies of the bg image
   for i = 0, 2 do
@@ -58,8 +59,6 @@ function Ship.dev_background_starfield1(parent, res)
   local offx, offy = -(2 * picw), -(2 * pich)
   local comps = {
     { "name", { name = "background_starfield_1" } },
-    { "tr",   {} },
-    -- { "paralax", { x = 0.5, y = 0.5 } },
   }
   -- tile-in a few copies of the bg image
   for i = 0, 2 do
