@@ -54,6 +54,12 @@ return {
     type = "resource_file",
     file = "modules/asteroids/images/bg/backgrounds.res.lua",
   },
+  {
+    type = "resource_file",
+    -- file = "modules/asteroids/images/explosions/explosions.res.lua",
+    file = "modules/asteroids/images/explosions/sheets_halved/explosions.res.lua",
+  },
+
   -- {
   --   type = "sound",
   --   name = "drop_puck1",

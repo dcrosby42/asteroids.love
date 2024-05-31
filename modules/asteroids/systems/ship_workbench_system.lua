@@ -4,6 +4,7 @@ Jigs.test_flight = require "modules.asteroids.jigs.test_flight"
 Jigs.flame_editor = require "modules.asteroids.jigs.flame_editor"
 Jigs.bullet_editor = require "modules.asteroids.jigs.bullet_editor"
 Jigs.roid_browser = require "modules.asteroids.jigs.roid_browser"
+Jigs.explosion_browser = require "modules.asteroids.jigs.explosion_browser"
 
 -- map of kbd presses to jigs:
 local JigSelectorMap = {
@@ -11,9 +12,10 @@ local JigSelectorMap = {
   ["2"] = "bullet_editor",
   ["3"] = "flame_editor",
   ["4"] = "roid_browser",
+  ["5"] = "explosion_browser",
 }
 -- local DefaultJigName = "roid_browser"
-local DefaultJigName = "test_flight"
+local DefaultJigName = "explosion_browser"
 -- local DefaultJigName = "bullet_editor"
 
 local function transitionToJig(jigName, workbench, estore, res)

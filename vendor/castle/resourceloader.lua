@@ -1,6 +1,6 @@
 local inspect = require('inspect')
 local MyDebug = require('mydebug')
-local Debug = MyDebug.sub("resourceloader", false, false)
+local Debug = MyDebug.sub("resourceloader", true, true)
 
 local R = {}
 
@@ -116,7 +116,7 @@ function Anim.simpleSheetToPics(img, w, h, picOpts, count)
       local x = (i - 1) * w
       local pic = R.makePic(nil, img, { x = x, y = y, w = w, h = h }, picOpts)
       table.insert(pics, pic)
-      Debug.println("Added pic.rect x=" .. x .. " y=" .. y .. " w=" .. w ..
+      Debug.println("simpleSheetToPics: Added pic.rect x=" .. x .. " y=" .. y .. " w=" .. w ..
         " h=" .. h)
       if count and #pics >= count then
         Debug.println("Reach count limit of " .. count .. "; returning")
@@ -245,35 +245,34 @@ local Loaders = {}
 -- data: {picNums (list of ints = pic indexes), sx, sy (scale x and y, optional), frameDuration, frameDurations}
 function Loaders.picStrip_anim(res, pics, name, data)
   local anim
-  if data.picNums then
-    if #data.picNums == 1 then
-      -- simpler form of anim
-      anim = Anim.makeSinglePicAnim(pics[data.picNums[1]])
-    else
-      local myPics = map(data.picNums, function(picIndex)
+  if data.picNums and #data.picNums == 1 then
+    -- simpler form of anim
+    anim = Anim.makeSinglePicAnim(pics[data.picNums[1]])
+  else
+    local myPics = pics
+    if data.picNums then
+      myPics = map(data.picNums, function(picIndex)
         return pics[picIndex]
       end)
-      if data.frameDurations and #data.frameDurations > 0 then
-        -- Apply durations per frame, according to data.frameDurations.
-        -- If data.frameDurations has fewer entries than anim.pics, that last duration is copied out to the end.
-        anim = Anim.makeSimpleAnim(myPics)
-        for i = 1, #anim.pics do
-          anim.pics[i].duration = data.frameDurations[i] or
-              anim.pics[i - 1].duration -- assumes there's at least 1 to fall back on
-        end
-        -- update overall anim duration
-        Anim.recalcDuration(anim)
-      else
-        -- standard duration on all frames
-        anim = Anim.makeSimpleAnim(myPics, data.frameDuration) -- dur may be nil here
-      end
     end
-    if data.sx then anim.sx = data.sx end
-    if data.sy then anim.sy = data.sy end
-    res:get('anims'):put(name, anim)
-  else
-    error("picStrip_anim requires picNums")
+    if data.frameDurations and #data.frameDurations > 0 then
+      -- Apply durations per frame, according to data.frameDurations.
+      -- If data.frameDurations has fewer entries than anim.pics, that last duration is copied out to the end.
+      anim = Anim.makeSimpleAnim(myPics)
+      for i = 1, #anim.pics do
+        anim.pics[i].duration = data.frameDurations[i] or
+            anim.pics[i - 1].duration -- assumes there's at least 1 to fall back on
+      end
+      -- update overall anim duration
+      Anim.recalcDuration(anim)
+    else
+      -- standard duration on all frames
+      anim = Anim.makeSimpleAnim(myPics, data.frameDuration) -- dur may be nil here
+    end
   end
+  if data.sx then anim.sx = data.sx end
+  if data.sy then anim.sy = data.sy end
+  res:get('anims'):put(name, anim)
 end
 
 function Loaders.picStrip(res, picStrip)

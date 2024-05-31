@@ -386,6 +386,7 @@ function lfindallby(list, key, val)
 end
 
 -- Map over a list and return a list of transformed items
+-- (uses primitive iteration instead of ipairs)
 function lmap(list, fn)
   local res = {}
   for i = 1, #list do
@@ -393,6 +394,8 @@ function lmap(list, fn)
   end
   return res
 end
+
+map = lmap
 
 -- Map over the k,v in a map and return a map with the same keyset
 function tmap(t, fn)
@@ -639,14 +642,6 @@ end
 
 function colorstring(c)
   return "Color(" .. c[1] .. "," .. c[2] .. "," .. c[3] .. "," .. tostring(c[4]) .. ")"
-end
-
-function map(array, func)
-  local new_array = {}
-  for i, v in ipairs(array) do
-    new_array[i] = func(v)
-  end
-  return new_array
 end
 
 function memoize0(fn)
