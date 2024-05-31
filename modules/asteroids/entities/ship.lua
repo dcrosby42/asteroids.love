@@ -33,13 +33,36 @@ function Ship.dev_background(parent, res)
   return parent:newEntity(comps)
 end
 
+function Ship.dev_stars_bg(parent, configs)
+  -- config: pic, paralax
+  for _, config in ipairs(configs) do
+    local picId = config.pic
+    local picw, pich = 4096, 4096
+    local offx, offy = -(2 * picw), -(2 * pich)
+    local comps = {
+      { "name", { name = pic } },
+      { "tr",   { parax = config.paralax, paray = config.paralax } },
+    }
+    -- tile-in a few copies of the bg image
+    for i = 0, 2 do
+      local x = offx + (i * picw)
+      for j = 0, 2 do
+        local y = offy + (j * pich)
+        local cmp = { "pic", { id = picId, x = x, y = y } }
+        comps[#comps + 1] = cmp
+      end
+    end
+  end
+  -- return parent:newEntity(comps)
+end
+
 function Ship.dev_background_nebula_blue(parent, res)
   local picId = "nebula_blue"
   local picw, pich = 4096, 4096
   local offx, offy = -(2 * picw), -(2 * pich)
   local comps = {
     { "name", { name = "background_nebula" } },
-    { "tr",   { parax = 0.5, paray = 0.5 } },
+    { "tr",   { parax = 0.75, paray = 0.75 } },
   }
   -- tile-in a few copies of the bg image
   for i = 0, 2 do
@@ -59,6 +82,7 @@ function Ship.dev_background_starfield1(parent, res)
   local offx, offy = -(2 * picw), -(2 * pich)
   local comps = {
     { "name", { name = "background_starfield_1" } },
+    { "tr",   { parax = 0.5, paray = 0.5 } },
   }
   -- tile-in a few copies of the bg image
   for i = 0, 2 do
@@ -67,6 +91,25 @@ function Ship.dev_background_starfield1(parent, res)
       local y = offy + (j * pich)
       local cmp = { "pic", { id = picId, x = x, y = y } }
       comps[#comps + 1] = cmp
+    end
+  end
+  return parent:newEntity(comps)
+end
+
+function Ship.dev_background_starfield2(parent, res)
+  local picId = "starfield_2"
+  local picw, pich = 4096, 4096
+  local offx, offy = -(2 * picw), -(2 * pich)
+  local comps = {
+    { "name", { name = "background_starfield_1" } },
+    { "tr",   { parax = 0.5, paray = 0.5 } },
+  }
+  -- tile-in a few copies of the bg image
+  for i = 0, 2 do
+    local x = offx + (i * picw)
+    for j = 0, 2 do
+      local y = offy + (j * pich)
+      local cmp = { "pic", { id = picId, x = x, y = y } }
     end
   end
   return parent:newEntity(comps)
