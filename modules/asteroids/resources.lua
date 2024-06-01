@@ -79,7 +79,15 @@ return {
   {
     type = "sound",
     name = "medium_explosion_1",
-    data = { file = "modules/asteroids/sounds/medium-explosion-40472.mp3", },
+    data = {
+      file = "modules/asteroids/sounds/medium-explosion-40472.mp3",
+      volume = 0.4,
+    },
+  },
+  {
+    type = "sound",
+    name = "laser_small",
+    data = { file = "modules/asteroids/sounds/laser_small.wav", },
   },
 
   -- {

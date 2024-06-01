@@ -37,7 +37,9 @@ local function controlShip(ship, estore, input, res)
   end
   if ship.keystate.pressed.space then
     Ship.fireBullet(ship, "left", "ship_bullets_04", -1500)
-    Ship.fireBullet(ship, "right", "ship_bullets_04", -1500)
+    local bullet = Ship.fireBullet(ship, "right", "ship_bullets_04", -1500)
+
+    bullet:newComp("sound", { sound = "laser_small" })
   end
 
 
