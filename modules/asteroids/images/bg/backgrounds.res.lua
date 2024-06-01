@@ -27,17 +27,21 @@ return {
   {
     type = "pic",
     name = "nebula_blue",
-    data = { path = "modules/asteroids/images/bg/Nebula Blue.png" },
+    data = {
+      path = "modules/asteroids/images/bg/NebulaBlue.png",
+      sx = 2,
+      sy = 2,
+    },
   },
   {
     type = "pic",
     name = "nebula_red",
-    data = { path = "modules/asteroids/images/bg/Nebula Red.png" },
+    data = { path = "modules/asteroids/images/bg/NebulaRed.png" },
   },
   {
     type = "pic",
     name = "nebula_aqua_pink",
-    data = { path = "modules/asteroids/images/bg/Nebula Aqua-Pink.png" },
+    data = { path = "modules/asteroids/images/bg/NebulaAquaPink.png" },
   },
   -- {
   --   type = "pic",
