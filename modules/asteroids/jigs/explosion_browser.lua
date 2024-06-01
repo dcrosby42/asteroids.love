@@ -1,4 +1,5 @@
 local Ship = require "modules.asteroids.entities.ship"
+local Roids = require "modules.asteroids.entities.roids"
 local Explosion = require "modules.asteroids.entities.explosion"
 local Menu = require "modules.asteroids.jigs.menu"
 local State = require "castle.state"
@@ -97,6 +98,63 @@ end
 --   end
 -- })
 
+local function addRoid(parent, estore)
+  local roid = Roids.random(parent, { sizeCat = "large", name = "target_roid", x = -200, y = -200 })
+  roid:newComp("vel", {
+    dx = 1,
+    dy = 1,
+    angularvelocity = 0.03,
+  })
+  -- Remove lingering explosion:
+  local splode = estore:getEntityByName("roidsplode")
+  if splode then splode:destroy() end
+end
+
+local function killRoid(parent, estore)
+  local roid = estore:getEntityByName("target_roid")
+  if roid then
+    -- Set the roid to remove itself
+    selfDestructEnt(roid, 0.2)
+
+    -- Generate explosion
+    local x, y = roid.tr.x, roid.tr.y
+    local size = 2.5
+    local factor = 0.8
+    local expl = Explosion.explosion(parent, { name = "roidsplode", size = size, x = x, y = y, animSpeed = factor })
+    selfDestructEnt(expl, 2.0)
+  end
+end
+
+local function moveRoid(roid)
+  if roid.vel then
+    roid.tr.x = roid.tr.x + roid.vel.dx
+    roid.tr.y = roid.tr.y + roid.vel.dy
+    roid.tr.r = roid.tr.r + roid.vel.angularvelocity
+  end
+end
+
+-- Experimental roid detonator:
+table.insert(Tabs, 1, {
+  enter = function(jig, estore)
+    local e = jig:newEntity({
+      { "name", { name = "nukeit" } },
+    })
+    addRoid(e, estore)
+    -- Roids.random(e, { sizeCat = "medium" })
+    -- Explosion.explosion(e, { size = 1, x = 0, y = 0, animSpeed = 1.5 })
+    -- local x, y = -500, 0
+    -- local s = 1
+    -- for i = 1, 10 do
+    --   Explosion.explosion(e, { size = s, x = x, y = y })
+    --   x = x + 150
+    -- end
+  end,
+  leave = function(jig, estore)
+    local e = estore:getEntityByName("nukeit")
+    if e then e:destroy() end
+  end
+})
+
 local function handleTabSwitch(jig, estore)
   local flip
   if jig.keystate.pressed.left then
@@ -123,7 +181,7 @@ function Jig.init(parent, estore, res)
   local tabIdx = 1
   local jig = parent:newEntity({
     { "name",     { name = "explosion_browser" } },
-    { "keystate", { handle = { "left", "right" } } },
+    { "keystate", { handle = { "left", "right", "space" } } },
     { "state",    { name = "tab", value = tabIdx } },
   })
 
@@ -142,6 +200,23 @@ function Jig.update(estore, input, res)
   -- slow-rotate the explosions
   local jig = estore:getEntityByName("explosion_browser")
   handleTabSwitch(jig, estore)
+
+  local roid = estore:getEntityByName("target_roid")
+  if roid then
+    moveRoid(roid)
+  end
+  if jig.keystate.pressed.space then
+    local nukeit = estore:getEntityByName("nukeit")
+    if nukeit then
+      if roid then
+        killRoid(nukeit, estore)
+      else
+        addRoid(nukeit, estore)
+      end
+    end
+  end
+
+
   -- jig:walkEntities(hasTag("explosion"), function(e)
   --   e.tr.r = e.tr.r + 0.002
   -- end)

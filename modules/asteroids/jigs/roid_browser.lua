@@ -1,33 +1,35 @@
 local Ship = require "modules.asteroids.entities.ship"
+local Roids = require "modules.asteroids.entities.roids"
 local Menu = require "modules.asteroids.jigs.menu"
 local State = require "castle.state"
 local TweenHelpers = require "castle.tween.tween_helpers"
 
-local RoidPics = {
-  "roid_small_grey_01",
-  "roid_small_red_01",
+local RoidPics = Roids.PicIds
+-- local RoidPics = {
+--   "roid_small_grey_01",
+--   "roid_small_red_01",
 
-  "roid_small_grey_02",
-  "roid_small_red_02",
+--   "roid_small_grey_02",
+--   "roid_small_red_02",
 
-  "roid_medium_grey_01",
-  "roid_medium_red_01",
+--   "roid_medium_grey_01",
+--   "roid_medium_red_01",
 
-  "roid_medium_grey_02",
-  "roid_medium_red_02",
+--   "roid_medium_grey_02",
+--   "roid_medium_red_02",
 
-  "roid_medium_grey_03",
-  "roid_medium_red_03",
+--   "roid_medium_grey_03",
+--   "roid_medium_red_03",
 
-  "roid_large_grey_01",
-  "roid_large_red_01",
+--   "roid_large_grey_01",
+--   "roid_large_red_01",
 
-  "roid_large_grey_02",
-  "roid_large_red_02",
+--   "roid_large_grey_02",
+--   "roid_large_red_02",
 
-  "roid_large_grey_03",
-  "roid_large_red_03",
-}
+--   "roid_large_grey_03",
+--   "roid_large_red_03",
+-- }
 
 -- Reasonable scaling ranges:
 --   small: 0.5 thru 1.5
@@ -166,8 +168,7 @@ local function addRoidSheet(jig, cfgs, x, y, w)
         y = y
       } },
     })
-    local s = cfg.size
-    local roid = Jig.newRoid(tile, { pic = cfg.pic, size = s })
+    local roid = Jig.newRoid(tile, { pic = cfg.pic, size = cfg.size })
 
     local labelText = string.sub(cfg.pic, 6, -1)
     tile:newEntity({
