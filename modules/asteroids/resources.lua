@@ -34,6 +34,17 @@ return {
     name = "dev",
     data = { bgmusic = false },
   },
+  {
+    type = "settings",
+    name = "resource_loader",
+    data = {
+      lazy_load = {
+        pics = true,
+        picStrips = true,
+        anims = true,
+      },
+    },
+  },
   -- {
   --   type = "resource_file",
   --   file = "modules/asteroids/images/asteranims.res.lua",

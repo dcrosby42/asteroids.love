@@ -205,6 +205,70 @@ function ResourceSet:alias(from, to)
   return self[from]
 end
 
+function ResourceSet:remove(name)
+  self[name] = nil
+end
+
+local LazyResourceSet = {}
+
+function LazyResourceSet:new(name)
+  name = name or "UNNAMED"
+  local o = {
+    _private = {
+      name = "LazyResourceSet[" .. name .. "]",
+      builders = {},
+    },
+  }
+  setmetatable(o, self)
+  self.__index = self
+  return o
+end
+
+function LazyResourceSet:put(name, obj)
+  self[name] = obj
+  return obj
+end
+
+function LazyResourceSet:put_lazy(name, func)
+  self._private.builders[name] = func
+end
+
+function LazyResourceSet:get(name)
+  local res = self[name]
+  if res then return res end
+
+  local func = self._private.builders[name]
+  if func then
+    -- build the resource using its constructor
+    res = func()
+    -- cache the resource
+    self[name] = res
+    -- return it
+    return res
+  end
+  -- no cached resoure or builder func:
+  error(self._.private.name .. ": No resource or constructor for key '" .. name .. "'")
+end
+
+function LazyResourceSet:remove(name)
+  self[name] = nil
+  self._private.builders[name] = nil
+end
+
+function LazyResourceSet:alias(from, to)
+  local res = self[to]
+  if res then
+    self[from] = res
+    return
+  end
+  local func = self._private.builders[to]
+  if func then
+    self._private.builders[from] = func
+    return
+  end
+  error(self._private.name .. ": cannot alias to unknown key '" .. to .. "'")
+end
+
 local ResourceRoot = {}
 
 function ResourceRoot:new()
@@ -217,7 +281,7 @@ end
 function ResourceRoot:get(name)
   local resSet = self[name]
   if resSet == nil then
-    resSet = ResourceSet:new()
+    resSet = LazyResourceSet:new()
     self[name] = resSet
   end
   return resSet
@@ -236,6 +300,22 @@ end
 -- Loaders
 --
 
+-- Adds a named resource to the named resource set.
+-- Instead of passing in the object to store, a function is given
+-- that constructs the data at the appropriate time.
+-- Depending on the flags under settings.resource_loader.lazy_load,
+-- the object is either eager-loaded right now, or its buildFunc will
+-- be put_lazy'd into the resource set for lazy just-in-time loading later.
+local function addToResourceSet(res, rsetName, resName, buildFunc)
+  local settings = res:get("settings"):get("resource_loader")
+  local lazy = settings and settings.lazy_load and settings.lazy_load[rsetName]
+  if lazy then
+    res:get(rsetName):put_lazy(resName, buildFunc)
+  else
+    res:get(rsetName):put(resName, buildFunc())
+  end
+end
+
 local Loaders = {}
 
 -- Construct and add a new 'anim' resource from a picStrip.
@@ -243,7 +323,7 @@ local Loaders = {}
 -- name: anim name and key in root.anims[key]
 -- pics: the array of pics loaded from a picStrip
 -- data: {picNums (list of ints = pic indexes), sx, sy (scale x and y, optional), frameDuration, frameDurations}
-function Loaders.picStrip_anim(res, pics, name, data)
+function Loaders.mk_picStrip_anim(pics, data)
   local anim
   if data.picNums and #data.picNums == 1 then
     -- simpler form of anim
@@ -272,7 +352,7 @@ function Loaders.picStrip_anim(res, pics, name, data)
   end
   if data.sx then anim.sx = data.sx end
   if data.sy then anim.sy = data.sy end
-  res:get('anims'):put(name, anim)
+  return anim
 end
 
 -- Resource type: picStrip
@@ -280,22 +360,51 @@ end
 -- Optionally adds specific pics from the set into the "pics" resource set.
 -- Optionally builds and adds anim objects to the "anims" resource set.
 function Loaders.picStrip(res, picStrip)
+  -- local data = Loaders.getData(picStrip)
+  -- local pics = Anim.simpleSheetToPics(R.getImage(data.path), data.picWidth,
+  --   data.picHeight, data.picOptions,
+  --   data.count)
+
+  -- res:get('picStrips'):put(picStrip.name, pics)
+
+  -- -- Any individual pics called out by the config should get indexed by name:
+  -- if data.pics then
+  --   local rset = res:get('pics')
+  --   for name, index in pairs(data.pics) do rset:put(name, pics[index]) end
+  -- end
+  -- -- Any individual anims called out by the config should get loaded as anims:
+  -- if data.anims then
+  --   for name, animData in pairs(data.anims) do
+  --     Loaders.picStrip_anim(res, pics, name, animData)
+  --   end
+  -- end
+  -- addToResourceSet(res,"picStrips",)
+
+  -- Add a named list of pic objects to the picStrips resource set
   local data = Loaders.getData(picStrip)
-  local pics = Anim.simpleSheetToPics(R.getImage(data.path), data.picWidth,
-    data.picHeight, data.picOptions,
-    data.count)
+  addToResourceSet(res, "picStrips", picStrip.name, function()
+    return Anim.simpleSheetToPics(R.getImage(data.path), data.picWidth, data.picHeight, data.picOptions, data.count)
+  end)
 
-  res:get('picStrips'):put(picStrip.name, pics)
-
-  -- Any individual pics called out by the config should get indexed by name:
+  -- Any individual pics called out by the config should be added to "pics":
   if data.pics then
-    local rset = res:get('pics')
-    for name, index in pairs(data.pics) do rset:put(name, pics[index]) end
+    for name, index in pairs(data.pics) do
+      addToResourceSet(res, "pics", name, function()
+        print(">> Loaders.picStrip / pic: " .. name)
+        local pics = res:get('picStrips'):get(picStrip.name)
+        return pics[index]
+      end)
+    end
   end
+
   -- Any individual anims called out by the config should get loaded as anims:
   if data.anims then
     for name, animData in pairs(data.anims) do
-      Loaders.picStrip_anim(res, pics, name, animData)
+      addToResourceSet(res, "anims", name, function()
+        print(">> Loaders.picStrip / anim: " .. name)
+        local pics = res:get('picStrips'):get(picStrip.name)
+        return Loaders.mk_picStrip_anim(pics, animData)
+      end)
     end
   end
 end
@@ -304,18 +413,37 @@ end
 -- Adds a "pic" resource.
 -- picConfig:
 --   name
---   data (string, or table)
---    path
---    rect {x,y,w,h}
---    sx
---    sy
+--   data (path string, or table)
+--     path
+--     rect {x,y,w,h}
+--     sx
+--     sy
 function Loaders.pic(res, picConfig)
-  local data = Loaders.getData(picConfig)
-  if type(data) == string then
-    data = { path = data }
-  end
-  local pic = R.makePic(data.path, nil, data.rect, { sx = data.sx, sy = data.sy })
-  res:get('pics'):put(picConfig.name, pic)
+  -- local lazy = res:get("settings"):get("resource_loader").lazy_load.pic
+  -- local buildit = function()
+  --   print(">> Loaders.pic: " .. picConfig.name)
+  --   local data = Loaders.getData(picConfig)
+  --   if type(data) == string then
+  --     data = { path = data }
+  --   end
+  --   local pic = R.makePic(data.path, nil, data.rect, { sx = data.sx, sy = data.sy })
+  --   return pic
+  -- end
+
+  -- if lazy then
+  --   res:get("pics"):put_lazy(picConfig.name, buildit)
+  -- else
+  --   res:get("pics"):put(picConfig.name, buildit())
+  -- end
+  addToResourceSet(res, "pics", picConfig.name, function()
+    print(">> Loaders.pic: " .. picConfig.name)
+    local data = Loaders.getData(picConfig)
+    if type(data) == string then
+      data = { path = data }
+    end
+    local pic = R.makePic(data.path, nil, data.rect, { sx = data.sx, sy = data.sy })
+    return pic
+  end)
 end
 
 -- Resource type: picaliases
@@ -565,10 +693,6 @@ end
 function Loaders.loadConfigs(res, configs, loaders)
   for i = 1, #configs do Loaders.loadConfig(res, configs[i], loaders) end
   return res
-end
-
-function R.newResourceRoot(loaders)
-  return ResourceRoot:new()
 end
 
 function R.buildResourceRoot(configs, loaders)

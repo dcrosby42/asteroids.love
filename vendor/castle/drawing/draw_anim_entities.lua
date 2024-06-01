@@ -4,7 +4,7 @@ local drawPicLike = require 'castle.drawing.draw_piclike'
 
 
 local function draw(e, anim, res)
-  local animRes = res.anims[anim.id]
+  local animRes = res.anims:get(anim.id)
   if not animRes then
     error("No anim resource '" .. anim.id .. "'")
   end

@@ -15,8 +15,8 @@ local JigSelectorMap = {
   ["5"] = "explosion_browser",
 }
 -- local DefaultJigName = "roid_browser"
-local DefaultJigName = "explosion_browser"
--- local DefaultJigName = "bullet_editor"
+-- local DefaultJigName = "explosion_browser"
+local DefaultJigName = "bullet_editor"
 
 local function transitionToJig(jigName, workbench, estore, res)
   local currentJigName = workbench.states.jig.value
