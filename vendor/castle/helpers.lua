@@ -495,6 +495,10 @@ function math.clamp(val, min, max)
   end
 end
 
+function math.mod1(val, div, max)
+  return ((val - 1) % div) + 1
+end
+
 function math.round0(num)
   return math.floor(num + 0.5)
 end
