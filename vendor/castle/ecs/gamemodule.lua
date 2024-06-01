@@ -29,7 +29,7 @@ end
 -- (Convenience wrapper around `newFromConfigs`.)
 -- `loaders` is optional, defaults to castle.ecs.Loaders.
 function GameModule.newFromFile(path, loaders)
-  local configs = ResourceLoader.loadfile(path)()
+  local configs = ResourceLoader.loadLuaFile(path)
   return GameModule.newFromConfigs(configs, loaders)
 end
 

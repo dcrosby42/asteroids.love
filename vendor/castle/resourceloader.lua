@@ -275,6 +275,10 @@ function Loaders.picStrip_anim(res, pics, name, data)
   res:get('anims'):put(name, anim)
 end
 
+-- Resource type: picStrip
+-- Generates picStrip resources.
+-- Optionally adds specific pics from the set into the "pics" resource set.
+-- Optionally builds and adds anim objects to the "anims" resource set.
 function Loaders.picStrip(res, picStrip)
   local data = Loaders.getData(picStrip)
   local pics = Anim.simpleSheetToPics(R.getImage(data.path), data.picWidth,
@@ -296,6 +300,7 @@ function Loaders.picStrip(res, picStrip)
   end
 end
 
+-- Resource type: pic
 -- Adds a "pic" resource.
 -- picConfig:
 --   name
@@ -313,6 +318,7 @@ function Loaders.pic(res, picConfig)
   res:get('pics'):put(picConfig.name, pic)
 end
 
+-- Resource type: picaliases
 -- Adds aliases for pics.
 -- Aliased pics must already be loaded!
 -- name (unused)
@@ -325,6 +331,7 @@ function Loaders.picaliases(res, aliasesConfig)
   end
 end
 
+-- Resource type: anim
 -- animConfig:
 --   name
 --   data
@@ -429,22 +436,25 @@ function Loaders.font(res, fontConfig)
   end
 end
 
-local function loadRelativeFile(path)
-  return loadfile(arg[1] .. "/" .. path) -- arg[1] is the "game directory" set by the runtime. On desktop it's usually "." but not so on ios etc.
-end
-
-function R.loadLuaFile(f)
-  -- TODO: support json, yaml, other?
-  local chunk = loadRelativeFile(f)
-  if chunk then
-    return chunk()
-  else
-    error("loadRelativeFile(" .. f .. ") returned nil")
+-- Load a Lua file and return its value (ie, execute the chunk returned from native `loadfile`)
+-- If the file doesn't provide a proper chunk, error is thrown.
+function R.loadLuaFile(path)
+  path = arg[1] .. "/" .. path
+  local chunk = loadfile(path)
+  if not chunk then
+    error("ResourceLoader.loadLuaFile(): nil lua chunk returned from file " .. path)
   end
+  return chunk()
 end
 
+-- loadDataFile is currently just "load lua file" but someday it could be expanded to support alternate formats
+-- such as yaml json or whatever
 local loadDataFile = R.loadLuaFile
 
+-- Uses the dataconverter cfg section of a resource cfg to transform a data value.
+-- Lua code is loaded from the file indicated by dataconverter.require.
+-- (function-style) If the returned code is a function F, F(data) is returned.
+-- (module-style) If the returned code is a table T, T[dataconverter.func](data) is returned.
 local function convertData(config, data)
   assert(config.dataconverter.require,
     "dataconverter requires 'require' parameter. config=" ..
@@ -467,54 +477,68 @@ local function convertData(config, data)
 end
 
 -- Descend into nested tables loading and merging any datafiles indicated by "datafile" keys
-local function expandDatafiles(obj)
-  if obj then
-    if type(obj) == 'table' then
-      if obj.datafile then
+local function expandDatafiles(dataObj)
+  if dataObj then
+    if type(dataObj) == 'table' then
+      if dataObj.datafile then
         -- If an object has a "datafile" key, load the file
-        local data = loadDataFile(obj.datafile)
+        local data = loadDataFile(dataObj.datafile)
         -- remove the "datafile" attribute
-        obj.datafile = nil
+        dataObj.datafile = nil
         -- add all the data to this object, potentially overwriting existing keys
-        tmerge(obj, data)
+        tmerge(dataObj, data)
         -- recurse through all key-vals for this object
-        expandDatafiles(obj)
-        return obj
+        expandDatafiles(dataObj)
+        return dataObj
       else
         -- recurse and expand all key-vals
-        for key, val in pairs(obj) do obj[key] = expandDatafiles(val) end
-        return obj
+        for key, val in pairs(dataObj) do dataObj[key] = expandDatafiles(val) end
+        return dataObj
       end
     end
   end
-  return obj
+  return dataObj
 end
 
-function Loaders.getData(obj)
+-- Return the data of a resource cfg.
+-- Nominally: returns resCfg.data.
+-- Alternatively, when datafile is given, the data is loaded from a file.
+-- Options:
+--   - expandDatafiles(bool, default false): recursively expand datafile refs in the data
+--   - dataconverter({require,func}): apply a transform function, loaded from a lua code file, to the data
+function Loaders.getData(resCfg)
   local data
-  if obj.data then
-    data = obj.data
-  elseif obj.datafile then
-    data = loadDataFile(obj.datafile)
+  if resCfg.data then
+    data = resCfg.data
+  elseif resCfg.datafile then
+    data = loadDataFile(resCfg.datafile)
   else
     error(
       "Loader: cannot get data from object, need 'data' or 'datafile': obj=" ..
-      inspect(obj))
+      inspect(resCfg))
   end
-  if obj.expandDatafiles then
+  if resCfg.expandDatafiles then
+    -- optionally recurse into the data structure to ensure all `datafile` references are expanded and merged
     data = expandDatafiles(data)
-    obj.expandDatafiles = nil
+    resCfg.expandDatafiles = nil
   end
-  if obj.dataconverter then data = convertData(obj, data) end
+  if resCfg.dataconverter then
+    -- optionally load and apply a lua function to transform the data:
+    data = convertData(resCfg, data)
+  end
   return data
 end
 
+-- Resource type: settings
 function Loaders.settings(res, settings)
   local data = Loaders.getData(settings)
   res:get('settings'):put(settings.name, data)
+  -- SPECIAL CASE: a settings cfg named "mydebug" controls debug settings for various modules
   if settings.name == 'mydebug' then applyMyDebugSettings(data) end
 end
 
+-- Resource type: data
+-- (Lua values such as strings, numbers, tables etc. USUALLY this is a table)
 function Loaders.data(res, config)
   local data = Loaders.getData(config)
   res:get('data'):put(config.name, data)
@@ -523,7 +547,7 @@ end
 function Loaders.loadConfig(res, config, loaders)
   loaders = loaders or Loaders
   if config.type == "resource_file" then
-    local confs = loadRelativeFile(config.file)()
+    local confs = R.loadLuaFile(config.file)
     return Loaders.loadConfigs(res, confs, loaders)
   else
     local loader = loaders[config.type]
@@ -552,11 +576,9 @@ function R.buildResourceRoot(configs, loaders)
 end
 
 function R.buildResourceRootFromFile(file, loaders)
-  local configs = loadRelativeFile(file)()
+  local configs = R.loadLuaFile(file)
   return R.buildResourceRoot(configs, loaders)
 end
-
-R.loadfile = loadRelativeFile
 
 R.Loaders = Loaders
 
