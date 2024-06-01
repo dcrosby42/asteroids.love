@@ -23,7 +23,7 @@ local DefaultConfig = {
 
 local Config = DefaultConfig
 
-local Hooks = {}
+local Castle = {}
 
 local RootModule
 local world, errWorld
@@ -47,14 +47,13 @@ end
 local function loadItUp(opts)
   if not opts then opts = {} end
   Config = tcopy(DefaultConfig)
-  if Hooks.module_name then
-    RootModule = ModuleLoader.load(Hooks.module_name)
-    ModuleLoader.debug_deps()
-  elseif Hooks.module then
-    RootModule = Hooks.module
+  if Castle.module_name then
+    RootModule = ModuleLoader.load(Castle.module_name)
+  elseif Castle.module then
+    RootModule = Castle.module
   end
   if not RootModule then
-    error("Please specify Hooks.module_name or Hooks.module")
+    error("Please specify Castle.module_name or Castle.module")
   end
   if not RootModule.newWorld then
     error("Your module must define a .newWorld() function")
@@ -67,7 +66,7 @@ local function loadItUp(opts)
   end
 
   if opts.doOnload ~= false then
-    if Hooks.onload then Hooks.onload() end
+    if Castle.onload then Castle.onload() end
     local w, h = love.graphics.getDimensions()
     Config.width = w
     Config.height = h
@@ -81,19 +80,19 @@ end
 
 local function reloadRootModule(newWorldOpts)
   love.audio.stop()
-  if Hooks.module_name then
-    local names = ModuleLoader.list_deps_of(Hooks.module_name)
+  if Castle.module_name then
+    local names = ModuleLoader.list_deps_of(Castle.module_name)
     for i = 1, #names do ModuleLoader.uncache_package(names[i]) end
-    ModuleLoader.uncache_package(Hooks.module_name)
+    ModuleLoader.uncache_package(Castle.module_name)
 
     ok, err = xpcall(function()
       loadItUp({ doOnload = false, newWorldOpts = newWorldOpts })
     end, debug.traceback)
     if ok then
-      print("castle: Reloaded root module.")
+      print("castle.main: Reloaded root module.")
       clearErrorMode()
     else
-      print("castle: RELOAD FAIL!")
+      print("castle.main: RELOAD FAIL!")
       setErrorMode(err, debug.traceback())
     end
   end
@@ -198,18 +197,6 @@ local function toKeyboardAction(state, key)
   keyboardAction.state = state
   keyboardAction.key = key
   applyKeyboardModifiers(keyboardAction)
-  -- for _,mod in ipairs({"ctrl","shift","gui"}) do
-  --   keyboardAction[mod] = false
-  --   keyboardAction["l"..mod] = false
-  --   keyboardAction["r"..mod] = false
-  --   if love.keyboard.isDown("l"..mod) then
-  --     keyboardAction["l"..mod] = true
-  --     keyboardAction[mod] = true
-  --   elseif love.keyboard.isDown("r"..mod) then
-  --     keyboardAction["r"..mod] = true
-  --     keyboardAction[mod] = true
-  --   end
-  -- end
   return keyboardAction
 end
 function love.keypressed(key, _scancode, _isrepeat)
@@ -362,8 +349,8 @@ function love.textinput(text)
 end
 
 function love.resize(w, h)
-  Debug.println("love.resize(" .. tostring(w) .. "," .. tostring(h) .. ")")
+  Debug.println("castle.main: love.resize(" .. tostring(w) .. "," .. tostring(h) .. ")")
   updateWorld({ type = "resize", w = w, h = h })
 end
 
-return Hooks
+return Castle

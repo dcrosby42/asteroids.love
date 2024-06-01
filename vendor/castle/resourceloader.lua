@@ -1,6 +1,6 @@
 local inspect = require('inspect')
 local MyDebug = require('mydebug')
-local Debug = MyDebug.sub("resourceloader", true, true)
+local Debug = MyDebug.sub("resourceloader", false, false)
 
 local R = {}
 
