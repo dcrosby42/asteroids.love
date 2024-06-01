@@ -139,6 +139,7 @@ function love.update(dt)
 end
 
 local function drawErrorScreen(w)
+  love.graphics.reset()
   love.graphics.setBackgroundColor(0.5, 0, 0)
   love.graphics.setFont(INITIAL_FONT)
   love.graphics.setColor(1, 1, 1, 1)

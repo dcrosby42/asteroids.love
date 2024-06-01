@@ -269,6 +269,12 @@ function LazyResourceSet:alias(from, to)
   error(self._private.name .. ": cannot alias to unknown key '" .. to .. "'")
 end
 
+function LazyResourceSet:buildAll()
+  for k, _ in pairs(self._private.builders) do
+    self:get(k)
+  end
+end
+
 local ResourceRoot = {}
 
 function ResourceRoot:new()
@@ -296,6 +302,22 @@ function ResourceRoot:debugString()
   return s
 end
 
+function ResourceRoot:buildAll()
+  for _, rset in pairs(self) do
+    if type(rset) == "table" and rset.buildAll then
+      rset:buildAll()
+    end
+  end
+end
+
+function R.settings(res)
+  return res:get("settings"):get("resource_loader") or {}
+end
+
+function R.shouldRealizeOnModuleLoad(res)
+  return R.settings(res).realize_on_module_load
+end
+
 --
 -- Loaders
 --
@@ -307,8 +329,8 @@ end
 -- the object is either eager-loaded right now, or its buildFunc will
 -- be put_lazy'd into the resource set for lazy just-in-time loading later.
 local function addToResourceSet(res, rsetName, resName, buildFunc)
-  local settings = res:get("settings"):get("resource_loader")
-  local lazy = settings and settings.lazy_load and settings.lazy_load[rsetName]
+  local settings = R.settings(res)
+  local lazy = settings.lazy_load and settings.lazy_load[rsetName]
   if lazy then
     res:get(rsetName):put_lazy(resName, buildFunc)
   else
@@ -390,7 +412,7 @@ function Loaders.picStrip(res, picStrip)
   if data.pics then
     for name, index in pairs(data.pics) do
       addToResourceSet(res, "pics", name, function()
-        print(">> Loaders.picStrip / pic: " .. name)
+        Debug.println("Loaders.picStrip / pic: " .. name)
         local pics = res:get('picStrips'):get(picStrip.name)
         return pics[index]
       end)
@@ -401,7 +423,7 @@ function Loaders.picStrip(res, picStrip)
   if data.anims then
     for name, animData in pairs(data.anims) do
       addToResourceSet(res, "anims", name, function()
-        print(">> Loaders.picStrip / anim: " .. name)
+        Debug.println("Loaders.picStrip / anim: " .. name)
         local pics = res:get('picStrips'):get(picStrip.name)
         return Loaders.mk_picStrip_anim(pics, animData)
       end)
@@ -419,24 +441,8 @@ end
 --     sx
 --     sy
 function Loaders.pic(res, picConfig)
-  -- local lazy = res:get("settings"):get("resource_loader").lazy_load.pic
-  -- local buildit = function()
-  --   print(">> Loaders.pic: " .. picConfig.name)
-  --   local data = Loaders.getData(picConfig)
-  --   if type(data) == string then
-  --     data = { path = data }
-  --   end
-  --   local pic = R.makePic(data.path, nil, data.rect, { sx = data.sx, sy = data.sy })
-  --   return pic
-  -- end
-
-  -- if lazy then
-  --   res:get("pics"):put_lazy(picConfig.name, buildit)
-  -- else
-  --   res:get("pics"):put(picConfig.name, buildit())
-  -- end
   addToResourceSet(res, "pics", picConfig.name, function()
-    print(">> Loaders.pic: " .. picConfig.name)
+    Debug.println("Loaders.pic: " .. picConfig.name)
     local data = Loaders.getData(picConfig)
     if type(data) == string then
       data = { path = data }

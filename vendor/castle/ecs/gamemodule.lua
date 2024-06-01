@@ -19,6 +19,9 @@ function GameModule.newFromConfigs(configs, loaders)
     update = ecs_config.update,
     draw = ecs_config.draw,
     loadResources = function()
+      if ResourceLoader.shouldRealizeOnModuleLoad(res) then
+        res:buildAll()
+      end
       return res
     end,
   })

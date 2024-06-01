@@ -38,11 +38,15 @@ return {
     type = "settings",
     name = "resource_loader",
     data = {
+      -- lazy_load means: DO NOT immediately load actual asset data
       lazy_load = {
         pics = true,
         picStrips = true,
         anims = true,
       },
+      -- Any lazy_load resources are eager-loaded when their game module is loaded.
+      -- (as distinct from app startup time)
+      realize_on_module_load = false,
     },
   },
   -- {
@@ -67,8 +71,8 @@ return {
   },
   {
     type = "resource_file",
-    -- file = "modules/asteroids/images/explosions/explosions.res.lua",
     file = "modules/asteroids/images/explosions/sheets_halved/explosions.res.lua",
+    -- file = "modules/asteroids/images/explosions/explosions.res.lua",
   },
 
   -- {
