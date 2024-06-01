@@ -121,6 +121,8 @@ local function killRoid(parent, estore)
     local size = 2.5
     local factor = 0.8
     local expl = Explosion.explosion(parent, { name = "roidsplode", size = size, x = x, y = y, animSpeed = factor })
+    expl:newComp("sound", { sound = "medium_explosion_1" })
+
     selfDestructEnt(expl, 2.0)
   end
 end

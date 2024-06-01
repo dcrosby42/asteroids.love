@@ -509,31 +509,35 @@ end
 --   duration: sound len in seconds, default 0 for music, autodected otherwise
 -- 3rd arg "music" is in internal convenience, may be nil
 function Loaders.sound(res, soundConfig, asMusic)
-  local cfg = Loaders.getData(soundConfig)
-  local music = firstNonNil(asMusic, cfg.music, cfg.type == "music")
-  local soundRes = {
-    name = soundConfig.name,
-    file = cfg.file,
-    duration = 0,
-    volume = cfg.volume or 1,
-    music = music
-  }
-  if soundRes.music then
-    Debug.println(function()
-      return "Loaded music sound " .. soundRes.name
-          .. " from " .. soundRes.file
-    end)
-  else
-    -- static sounds are loaded/cached as SoundData, and duration is computed:
-    soundRes.data = R.getSoundData(cfg.file)
-    soundRes.duration = cfg.duration or soundRes.data:getDuration()
-    Debug.println(function()
-      return "Loaded static sound " .. soundRes.name
-          .. " duration=" .. tostring(soundRes.duration)
-          .. " from " .. soundRes.file
-    end)
-  end
-  res:get('sounds'):put(soundConfig.name, soundRes)
+  addToResourceSet(res, "sounds", soundConfig.name, function()
+    local data = Loaders.getData(soundConfig)
+    local isMusic = firstNonNil(asMusic, data.music, data.type == "music")
+    local soundRes = {
+      name = soundConfig.name,
+      file = data.file,
+      duration = 0,
+      volume = data.volume or 1,
+      music = isMusic
+    }
+    if soundRes.music then
+      -- don't load anything; music will be streamed by love2d sound engine
+      Debug.println(function()
+        return "Loaded music sound " .. soundRes.name
+            .. " from " .. soundRes.file
+      end)
+    else
+      -- static sounds are loaded/cached as SoundData.
+      -- If not explicitly given, duration is computed from the SoundData.
+      soundRes.data = R.getSoundData(data.file)
+      soundRes.duration = data.duration or soundRes.data:getDuration()
+      Debug.println(function()
+        return "Loaded static sound " .. soundRes.name
+            .. " duration=" .. tostring(soundRes.duration)
+            .. " from " .. soundRes.file
+      end)
+    end
+    return soundRes
+  end)
 end
 
 function Loaders.music(res, musicConfig)

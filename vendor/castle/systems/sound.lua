@@ -9,13 +9,13 @@ return defineUpdateSystem({ "sound" },
         -- accumulate time for playing sounds
         sound.playtime = sound.playtime + input.dt
 
-        local soundRes = res.sounds[sound.sound]
+        local soundRes = res.sounds:get(sound.sound)
         if sound.music or soundRes.music then
           -- NB: sound comps with music=true do not auto-vanish on completion.
         else
           -- static sounds:
           if sound.duration <= 0 then
-            sound.duration = res.sounds[sound.sound].duration
+            sound.duration = res.sounds:get(sound.sound).duration
             Debug.println("Backfilled sound " .. sound.sound .. " duration=" .. tostring(sound.duration))
           end
           if (not sound.loop) and (sound.playtime > sound.duration) then

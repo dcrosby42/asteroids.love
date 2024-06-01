@@ -53,7 +53,7 @@ local function drawSound(e, soundComp, res)
       -- 2. Create and configure new love.audio Source object
       -- 3. Register the Source with soundmanager for ongoing maint
       Debug.println("Playing sound " .. soundComp.sound)
-      local soundRes = res.sounds[soundComp.sound]
+      local soundRes = res.sounds:get(soundComp.sound)
       if soundRes then
         -- New Source:
         Debug.println(function()

@@ -43,6 +43,7 @@ return {
         pics = true,
         picStrips = true,
         anims = true,
+        sounds = true,
       },
       -- Any lazy_load resources are eager-loaded when their game module is loaded.
       -- (as distinct from app startup time)
@@ -75,11 +76,12 @@ return {
     -- file = "modules/asteroids/images/explosions/explosions.res.lua",
   },
 
-  -- {
-  --   type = "sound",
-  --   name = "drop_puck1",
-  --   data = { file = "modules/airhockey/sounds/drop_puck1.wav", },
-  -- },
+  {
+    type = "sound",
+    name = "medium_explosion_1",
+    data = { file = "modules/asteroids/sounds/medium-explosion-40472.mp3", },
+  },
+
   -- {
   --   type = "music",
   --   name = "city",
