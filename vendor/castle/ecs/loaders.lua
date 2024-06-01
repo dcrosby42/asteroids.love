@@ -10,26 +10,26 @@ local Comp = require "castle.components"
 
 local Loaders = R.Loaders.copy()
 
-local function loadSystems(sysConfig)
+local function loadSystems(sysConfig, res)
   local systems = Loaders.getData(sysConfig)
-  return composeSystems(systems) -- composeSystems() from ecs.ecshelpers
+  return composeSystems(systems, res) -- composeSystems() from ecs.ecshelpers
 end
 
-local function mkDrawSystemChain(systems)
+local function mkDrawSystemChain(systems, res)
   for i, sys in ipairs(systems) do
     if type(sys) == 'table' and #sys > 0 then
       sys = mkDrawSystemChain(sys)
     elseif type(sys) == 'string' then
-      sys = resolveSystem(sys, { systemKeys = { "drawSystem" } }) -- resolveSystem from ecs.ecshelpers
+      sys = resolveSystem(sys, { res = res, systemKeys = { "drawSystem" } }) -- resolveSystem from ecs.ecshelpers
     end
     systems[i] = sys
   end
   return makeFuncChain2(systems) -- mkFuncChain2 from castle.helpers
 end
 
-local function loadDrawSystems(drawSysConfig)
+local function loadDrawSystems(drawSysConfig, res)
   local drawSystems = Loaders.getData(drawSysConfig)
-  return mkDrawSystemChain(drawSystems)
+  return mkDrawSystemChain(drawSystems, res)
 end
 
 local function loadEntities(eConfig)
@@ -65,7 +65,7 @@ function Loaders.ecs(res, ecsConfig)
     entities = loadEntities(data.entities),
     components = loadComponents(data.components),
     update = loadSystems(data.systems),
-    draw = loadDrawSystems(data.drawSystems),
+    draw = loadDrawSystems(data.drawSystems, res),
   }
 
   res:get('ecs'):put(ecsConfig.name, ecs)

@@ -14,7 +14,6 @@ end
 
 function resolveSystem(s, opts)
   opts = opts or {}
-  opts.res = opts.res or ResourceLoader.newResourceRoot()
   opts.systemKeys = opts.systemKeys or { "updateSystem", "system", "System" }
   opts.systemConstructorKeys = opts.systemConstructorKeys or
       { "new", "newSystem", "newUpdateSystem" }
@@ -25,26 +24,32 @@ function resolveSystem(s, opts)
       if type(s[key]) == "function" then return s[key] end
     end
     for _, key in ipairs(opts.systemConstructorKeys) do
-      if type(s[key]) == "function" then return s[key](opts.res) end
+      if type(s[key]) == "function" then
+        return s[key](opts.res) -- hypothetically possible for res to be nil!
+      end
     end
   end
   error("ecshelpers.resolveSystem '" .. tostring(s) ..
     "' cannot be resolved as a System")
 end
 
-function composeSystems(systems)
+function composeSystems(systems, resRoot)
   local rsystems = {}
-  for i = 1, #systems do table.insert(rsystems, resolveSystem(systems[i])) end
+  for i = 1, #systems do table.insert(rsystems, resolveSystem(systems[i], { res = resRoot })) end
   return function(estore, input, res)
     for _, system in ipairs(rsystems) do system(estore, input, res) end
   end
 end
 
-function composeDrawSystems(systems)
+-- ...unused? deleteme?
+function composeDrawSystems(systems, resRoot)
   local rsystems = {}
   for i = 1, #systems do
     table.insert(rsystems,
-      resolveSystem(systems[i], { systemKeys = { "drawSystem" } }))
+      resolveSystem(systems[i], {
+        res = resRoot,
+        systemKeys = { "drawSystem" },
+      }))
   end
   return function(estore, res)
     for _, system in ipairs(rsystems) do system(estore, res) end
