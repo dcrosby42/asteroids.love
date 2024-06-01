@@ -142,7 +142,7 @@ end
 local function drawErrorScreen(w)
   love.graphics.setBackgroundColor(0.5, 0, 0)
   love.graphics.setFont(INITIAL_FONT)
-  love.graphics.setColor(1, 1, 1)
+  love.graphics.setColor(1, 1, 1, 1)
   love.graphics.print("!! CAUGHT ERROR !!\n\nHIT 'R' TO RELOAD\n\n" .. w.err ..
     "\n\n(inside castle)" .. w.traceback, 0, 0)
 end
