@@ -197,7 +197,10 @@ function Ship.fireBullet(ship, side, bulletPicId, bulletSpeed)
         cx = 0.5,
         cy = 0.5,
       } },
+      { 'radius', { radius = 10, debug = false } }
     })
+    selfDestructEnt(bulletE, 2)
+    return true
   end)
   return bulletE
 end

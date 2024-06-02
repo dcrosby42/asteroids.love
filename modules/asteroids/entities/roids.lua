@@ -98,6 +98,8 @@ function Roids.roid(parent, opts)
       color = opts.color,
       debug = false,
     } },
+    { 'radius', { radius = 65, debug = false } },
+    { "health", { hp = 6 } },
   })
   if opts.name then
     roid:newComp("name", { name = opts.name })
