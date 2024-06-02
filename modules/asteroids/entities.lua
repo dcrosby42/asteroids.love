@@ -1,4 +1,4 @@
-local Debug = require("mydebug").sub("AirHockey", true, true)
+local Debug = require("mydebug").sub("Asteroids", true, true)
 local Estore = require "castle.ecs.estore"
 local inspect = require "inspect"
 local Ship = require "modules.asteroids.entities.ship"

@@ -23,7 +23,7 @@ local function transitionToJig(jigName, workbench, estore, res)
   local currentJigName = workbench.states.jig.value
   local jig = Jigs[jigName]
   if jig and jig.init then
-    if currentJigName then
+    if currentJigName and currentJigName ~= '' then
       -- destroy current jig
       local currentJig = Jigs[currentJigName]
       local currentJigE = estore:getEntityByName(currentJigName)

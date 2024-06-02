@@ -61,10 +61,14 @@ local function controlShip(ship, estore, input, res)
 end
 
 local function controlShipBullets(estore, input, res)
-  estore:walkEntities(allOf(hasTag("ship_bullet"), hasComps("tr", "vel")), function(e)
+  -- estore:walkEntities(allOf(hasTag("ship_bullet"), hasComps("tr", "vel")), function(e)
+  --   e.tr.x = e.tr.x + (e.vel.dx * input.dt)
+  --   e.tr.y = e.tr.y + (e.vel.dy * input.dt)
+  -- end)
+  for _, e in ipairs(estore:indexLookupAll("byTag", "ship_bullet")) do
     e.tr.x = e.tr.x + (e.vel.dx * input.dt)
     e.tr.y = e.tr.y + (e.vel.dy * input.dt)
-  end)
+  end
 end
 
 local function addRoid(parent, sizeCat, x, y, opts)

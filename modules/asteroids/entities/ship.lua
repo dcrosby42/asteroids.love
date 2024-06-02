@@ -40,7 +40,7 @@ function Ship.dev_stars_bg(parent, configs)
     local picw, pich = 4096, 4096
     local offx, offy = -(2 * picw), -(2 * pich)
     local comps = {
-      { "name", { name = pic } },
+      { "name", { name = picId } },
       { "tr",   { parax = config.paralax, paray = config.paralax } },
     }
     -- tile-in a few copies of the bg image
