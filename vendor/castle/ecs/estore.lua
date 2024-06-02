@@ -1,11 +1,11 @@
 Comp = require 'castle.ecs.component'
 Entity = require 'castle/ecs/entity'
 require 'castle.ecs.debughelpers'
+Indexer = require 'castle.ecs.indexer'
+
+
 
 local Estore = {}
-
-local removeChildEntityFrom -- defined below
-local addChildEntityTo      -- defined below
 
 function Estore:new(o)
   local o = o or {
@@ -14,11 +14,17 @@ function Estore:new(o)
     comps = {},
     ents = {},
     caches = {},
+    indexConfigs = Indexer.DefaultConfigs,
+    indexes = {},
+    enableIndexing = true,
     _root = { _root = true, _children = {} },
     _reorderLockout = false,
   }
   setmetatable(o, self)
   self.__index = self
+  if o.enableIndexing then
+    o.indexes = Indexer.initIndexes(o.indexConfigs)
+  end
   return o
 end
 
@@ -33,6 +39,8 @@ function Estore:nextCid()
   self.cidCounter = self.cidCounter + 1
   return cid
 end
+
+local addChildEntityTo -- defined below
 
 function Estore:_makeEnt(eid)
   local e = Entity:new({
@@ -89,7 +97,8 @@ function Estore:destroyEntity(e)
     self:removeComp(comp)
   end
 
-  if e._parent then removeChildEntityFrom(e._parent, e) end
+  -- (for added safety; in most cases this will already have been handled by removal of the "parent" comp)
+  self:_deparent(e)
 
   e._destroyed = true
 end
@@ -139,54 +148,31 @@ function Estore:addComp(e, comp)
   -- Index the comp by cid
   self.comps[comp.cid] = comp
 
-  -- Add to this entity:
-  local key = comp.type
-  local keyp = key .. "s"
-
-  if key == "parent" then
-    if e.parent then
-      -- if e._parent and not e._parent._root then
-      error(
-        "UNACCEPTABLE! only one 'parent' Component per Entity please!\nExisting parent Comonent: " ..
-        Comp.debugString(e.parent) .. "\nNew parent Component: " ..
-        Comp.debugString(comp) .. "\nThis Entity: " ..
-        entityDebugString(e) .. "\nExisting parent: " ..
-        tdebug1(e._parent))
-    end
-    local pid = comp.parentEid
-    local parentEntity = self.ents[pid]
-    if parentEntity then
-      if e._parent then removeChildEntityFrom(e._parent, e) end
-      e._parent = parentEntity
-      local chs = parentEntity._children
-      local reorder = true
-      if not comp.order or comp.order == '' then
-        local myOrder = #chs + 1
-        if #chs > 0 then
-          local lastOrder = chs[#chs].order
-          if lastOrder then myOrder = lastOrder + 1 end
-        end
-        comp.order = myOrder
-        reorder = false
-      end
-      table.insert(chs, e)
-      if reorder and not self._reorderLockout then
-        parentEntity:resortChildren()
-      end
-    else
-      print("!! ERR Estore:addComp(): parentEntity with eid=" .. pid ..
-        " not found for comp: " .. Comp.debugString(comp))
-    end
+  -- Special handling for "parent" component type.
+  -- Adding a "parent" comp to an entity engenders some internal
+  if comp.type == "parent" then
+    self:_linkEntityToParent(e, comp)
   end
 
+  -- Which "convenience sets" to add this component to within the entity:
+  local key = comp.type   -- singular key
+  local keyp = key .. "s" -- plural key
+
   if not e[key] then
-    -- First component of this type
+    -- (first component of this type within this entity)
     e[key] = comp
     e[keyp] = {}
   end
+  -- Figure out how best to key the comp within the set:
   local compKey = comp.name
-  if compKey == nil or compKey == '' then compKey = comp.cid end
+  if compKey == nil or compKey == '' then
+    compKey = comp.cid
+  end
+  -- Link to the comp from the plural set
   e[keyp][compKey] = comp
+
+  -- update the auxiliary entity indexes based on this comp (if applicable)
+  self:_indexComp(comp)
 
   return comp
 end
@@ -216,8 +202,11 @@ function Estore:detachComp(e, comp)
       end
     end
 
-    if key == "parent" then self:_deparent(e) end
+    if comp.type == "parent" then
+      self:_deparent(e)
+    end
 
+    -- Check if the entity is now devoid of comps; if so, remove the entity
     local compkeycount = 0
     for k, v in pairs(e) do
       if k:byte(1) ~= 95 then -- k doesn't start with _
@@ -226,10 +215,10 @@ function Estore:detachComp(e, comp)
     end
     if compkeycount <= 1 then
       -- eid is only remaining key, meaning we have no comps... EVAPORATE THE ENTITY
-      -- self:_deparent(e) -- shouldn't need this since the parent comp would be gone already
       self.ents[e.eid] = nil
     end
   end
+  -- disassociate the comp from this entity
   comp.eid = ''
 end
 
@@ -240,11 +229,14 @@ function Estore:removeComp(comp)
     print("!! Estore:removeComp BAD EID comp=" .. Comp.debugString(comp))
     return
   end
+
+  -- de-index the comp (removes eid from any indexes created by this comp)
+  self:_deindexComp(comp)
+
   self:detachComp(self.ents[comp.eid], comp)
 
   self.comps[comp.cid] = nil -- uncache
   comp.cid = ''
-
   Comp.release(comp)
 end
 
@@ -377,7 +369,12 @@ function Estore:findEntity(matchFn)
 end
 
 function Estore:getEntityByName(name)
-  local ent
+  if not name then error("Estore:getEntityByName: name is required") end
+  if name == '' then error("Estore:getEntityByName: name can't be blank") end
+  local ent = self:indexLookupFirst("byName", name)
+  if ent then
+    return ent
+  end
   self:seekEntity(hasName(name), function(e)
     ent = e
     return true
@@ -385,7 +382,39 @@ function Estore:getEntityByName(name)
   return ent
 end
 
+-- Indexed entity lookup, eg ("byName","workbench")
+-- Intended for use where the key is expected to match just one entity.
+-- If there are indeed several, only the FIRST entity maching the key is returned.
+function Estore:indexLookupFirst(indexName, key)
+  if self.enableIndexing then
+    local eids = self.indexes[indexName][key]
+    if eids and #eids > 0 then
+      local eid = eids[1]
+      local ent = self.ents[eid]
+      if ent then
+        -- print("Estore:indexLookupFirst OK " .. indexName .. ", " .. key .. ": " .. eid)
+        return ent
+      end
+    end
+  end
+  return nil
+end
+
+-- Indexed entity lookup, eg ("byTag","roid")
+-- Returns a list of entities matching the key.
+-- Returns empty list for no match
+function Estore:indexLookupAll(indexName, key)
+  if self.enableIndexing then
+    local eids = self.indexes[indexName][key]
+    if eids and #eids > 0 then
+      return map(eids, function(eid) return self.ents[eid] end)
+    end
+  end
+  return {}
+end
+
 function Estore:getComponentOfNamedEntity(entName, compName)
+  -- TODO: refactor in terms of getEntityByName
   local comp
   self:seekEntity(hasName(entName), function(e)
     comp = e[compName]
@@ -394,27 +423,77 @@ function Estore:getComponentOfNamedEntity(entName, compName)
   return comp
 end
 
-function Estore:_deparent(e)
-  if e._parent then
-    if e._parent.eid and e._children then
-      for _, childEntity in ipairs(e._children) do
-        self:setupParent(e._parent, childEntity)
-      end
-    end
-    removeChildEntityFrom(e._parent, e)
-  else
-    if e._children then
-      for _, childEntity in ipairs(e._children) do
-        if childEntity.parent then self:removeComp(childEntity.parent) end
-        addChildEntityTo(self._root, childEntity)
-      end
-    end
+-- When a "parent"-type component is added to an entity, we do some fancy footwork
+-- to wire up the entity to its parent and make nice-nice with the siblings
+function Estore:_linkEntityToParent(e, comp)
+  if e.parent then
+    -- Entity already has a parent comp...?
+    error(
+      "UNACCEPTABLE! only one 'parent' Component per Entity please!\nExisting parent Comonent: " ..
+      Comp.debugString(e.parent) .. "\nNew parent Component: " ..
+      Comp.debugString(comp) .. "\nThis Entity: " ..
+      entityDebugString(e) .. "\nExisting parent: " ..
+      tdebug1(e._parent))
   end
+  -- Lookup the actual parent entity and keep a shortcut reference in _parent
+  local pid = comp.parentEid
+  local parentEntity = self.ents[pid]
+  if not parentEntity then
+    error("Estore:addComp(): couldn't find a parent entity for eid=" ..
+      pid .. ", while add comp: " .. Comp.debugString(comp))
+  end
+  self:_deparent(e) -- (shouldn't be needed, but doesn't hurt to be safe)
+  e._parent = parentEntity
+
+  -- Join our sibling entities in our parent entity's _children list:
+  local siblings = parentEntity._children
+  table.insert(siblings, e)
+
+  -- Try to ensure comp.order makes sense
+  local doReorder = true
+  if not comp.order or comp.order == '' then
+    local myOrder = #siblings + 1
+    if #siblings > 0 then
+      local lastOrder = siblings[#siblings].order
+      if lastOrder then myOrder = lastOrder + 1 end
+    end
+    comp.order = myOrder
+    doReorder = false
+  end
+  -- (maybe) rearrange the children in accordance to their stated ordering
+  if doReorder and not self._reorderLockout then
+    parentEntity:resortChildren()
+  end
+end
+
+-- Remove the internal linkage that wires the given entity to its parent.
+-- (This is invoked when a "parent"=type component gets removed)
+function Estore:_deparent(e)
+  if not e._parent then return end
+  -- Find where this entity lives amongst its siblings:
+  local myIndex = lfindindexof(e._parent._children, function(ch) return ch.eid == e.eid end)
+  -- Remove this entity from the parent's child list
+  if myIndex then
+    table.remove(e._parent._children, myIndex)
+  end
+  e._parent = nil
 end
 
 function Estore:setupParent(parentEnt, childEnt)
   if childEnt.parent then self:removeComp(childEnt.parent) end
   self:newComp(childEnt, 'parent', { parentEid = parentEnt.eid })
+end
+
+function Estore:_indexComp(comp)
+  if self.enableIndexing then
+    Indexer.indexComp(self.indexConfigs, self.indexes, comp)
+  end
+end
+
+function Estore:_deindexComp(comp)
+  if self.enableIndexing then
+    Indexer.deindexComp(self.indexConfigs, self.indexes, comp)
+  end
 end
 
 function Estore:search(matchFn, doFn)
@@ -488,20 +567,6 @@ function addChildEntityTo(parEnt, chEnt)
   assert(chEnt, "ERR addChildEntityTo nil chEnt?")
   chEnt._parent = parEnt
   table.insert(parEnt._children, chEnt)
-end
-
-function removeChildEntityFrom(parEnt, chEnt)
-  chEnt._parent = nil
-  local remi = -1
-  local eid = chEnt.eid
-  local list = parEnt._children
-  for i, n in ipairs(list) do
-    if n.eid == eid then
-      remi = i
-      break
-    end
-  end
-  if remi > 0 then table.remove(list, remi) end
 end
 
 return Estore
