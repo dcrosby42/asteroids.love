@@ -191,10 +191,12 @@ function sortEntities(ents, deep)
 end
 
 function tagEnt(e, name)
+  if not name then return end
   e:newComp('tag', { name = name })
 end
 
 function nameEnt(e, name)
+  if not name then return end
   if e.name then
     e.name.name = name
   else

@@ -1,5 +1,5 @@
 return function(e, res)
-  -- bounds: draw only during debug
+  -- box is usually just meant to bound an area: draw only during debug
   if e.box and e.box.w and e.box.h and debugDraw(e.box, res) then
     local w, h = e.box.w, e.box.h
     local ox = e.box.cx * w
@@ -25,6 +25,12 @@ return function(e, res)
       love.graphics.setColor(c.color)
       love.graphics.circle(c.style, c.x, c.y, c.r)
     end
+  end
+
+  -- radius is a circular bounding area: drawing only during debug
+  if e.radius and debugDraw(e.radius, res) then
+    love.graphics.setColor(e.radius.color)
+    love.graphics.circle("line", e.radius.x, e.radius.y, e.radius.radius)
   end
 end
 

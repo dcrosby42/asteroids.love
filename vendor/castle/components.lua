@@ -18,7 +18,9 @@ Comp.define("tr", TrAttrs)
 
 Comp.define("state", { 'value', '' })
 
-Comp.define("box", ext(RectAttrs, { 'debug', false, 'color', { 1, 1, 0, 1 } })) -- sx,sy?
+Comp.define("box", ext(RectAttrs, { 'debug', false, 'color', { 1, 1, 0, 1 } }))
+
+Comp.define("radius", { 'x', 0, 'y', 0, 'radius', 1, 'debug', false, 'color', { 1, 1, 0, 1 } })
 
 Comp.define("timer", {
   't', 0,

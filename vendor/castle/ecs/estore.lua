@@ -68,6 +68,7 @@ end
 
 function Estore:destroyEntity(e)
   if not e then return end
+  if e._destroyed then return end
 
   -- Destroy child entities. (Careful to iterate on a shallow copy of the _children list)
   for _, childEnt in ipairs(lcopy(e._children)) do
@@ -89,6 +90,8 @@ function Estore:destroyEntity(e)
   end
 
   if e._parent then removeChildEntityFrom(e._parent, e) end
+
+  e._destroyed = true
 end
 
 -- Claim a comp from its object pool and (optionally) initialize with values from given data.
