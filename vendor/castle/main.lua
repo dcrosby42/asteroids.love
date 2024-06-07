@@ -14,6 +14,7 @@ local soundmanager = require 'castle.soundmanager'
 
 local showDebugLog = false
 local Debug = MyDebug.sub("castle.main", true, true)
+local JoystickDebug = MyDebug.sub("castle.main.joystick", false, false)
 
 local Joystick = require "castle.joystick"
 local DefaultConfig = {
@@ -284,26 +285,24 @@ function love.touchreleased(id, x, y, dx, dy, pressure)
 end
 
 local _joystickAxisCache = {}
-local _joystickAxisThresh = 0.016
+-- local _joystickAxisThresh = 0.016
+local _joystickAxisThresh = 0.1
 local function dedupeJoystickAxis(joystick, axis, value)
   local id, inst = joystick:getID()
   local key = (id * 1000) + (10 * inst) + axis
+  local key = tostring(id) .. "_" .. tostring(inst) .. "_" .. axis
   local state = _joystickAxisCache[key]
   if not state then
-    state = {
-      -- last=love.timer.getTime(),
-      value = value,
-    }
+    state = 0
     _joystickAxisCache[key] = state
     return false
   end
-  -- state.last = love.timer.getTime()
-  if state.value == value then
+  if state == value then
     return true
-  elseif math.abs(value - state.value) < _joystickAxisThresh then
+  elseif math.abs(value - state) < _joystickAxisThresh then
     return true
   end
-  state.value = value
+  _joystickAxisCache[key] = value
   return false
 end
 
@@ -323,7 +322,7 @@ local function toJoystickAction(joystick, controlType, control, value)
   joystickAction.control = control
   joystickAction.value = (value or 0)
   local controlMap = Joystick.getControlMap(joystickAction.name)
-  joystickAction.controlMapName = controlMap.name
+  -- joystickAction.controlMapName = controlMap.name
   if controlType == "button" then
     joystickAction.controlName = controlMap.buttonNames[control]
   elseif controlType == "axis" then
@@ -332,16 +331,24 @@ local function toJoystickAction(joystick, controlType, control, value)
   return joystickAction
 end
 
+local function _identJoystick(joystick)
+  local id, inst = joystick:getID()
+  return joystick:getName() .. " " .. id .. " " .. inst
+end
+
 function love.joystickaxis(joystick, axis, value)
   if dedupeJoystickAxis(joystick, axis, value) then return end
+  JoystickDebug.println(_identJoystick(joystick) .. " axis " .. axis .. " " .. tostring(value))
   updateWorld(toJoystickAction(joystick, "axis", axis, value))
 end
 
 function love.joystickpressed(joystick, button)
+  JoystickDebug.println("pressed " .. button)
   updateWorld(toJoystickAction(joystick, "button", button, 1))
 end
 
 function love.joystickreleased(joystick, button)
+  JoystickDebug.println("releaseed " .. button)
   updateWorld(toJoystickAction(joystick, "button", button, 0))
 end
 
