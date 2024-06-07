@@ -37,6 +37,7 @@ function M.updateWorld(w, action)
         .. tostring(action.control) .. " "
         .. "(" .. tostring(action.controlName) .. ")"
     w.tracker[key] = action.value
+    print(action.state)
   end
   return w
 end

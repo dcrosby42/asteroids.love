@@ -117,9 +117,10 @@ end
 
 function Ship.ship(parent, res)
   local ship = parent:newEntity({
-    { "tr",   {} },
-    { "name", { name = "ship" } },
-    { "vel",  {} },
+    { "tr",              {} },
+    { "name",            { name = "ship" } },
+    { "vel",             {} },
+    { "ship_controller", {} }
   })
   ship:newEntity({
     { "tag", { name = "gun_muzzle" } },
