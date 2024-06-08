@@ -284,28 +284,6 @@ function love.touchreleased(id, x, y, dx, dy, pressure)
   updateWorld(toTouchAction("released", id, x, y, dx, dy))
 end
 
-local _joystickAxisCache = {}
--- local _joystickAxisThresh = 0.016
-local _joystickAxisThresh = 0.1
-local function dedupeJoystickAxis(joystick, axis, value)
-  local id, inst = joystick:getID()
-  local key = (id * 1000) + (10 * inst) + axis
-  local key = tostring(id) .. "_" .. tostring(inst) .. "_" .. axis
-  local state = _joystickAxisCache[key]
-  if not state then
-    state = 0
-    _joystickAxisCache[key] = state
-    return false
-  end
-  if state == value then
-    return true
-  elseif math.abs(value - state) < _joystickAxisThresh then
-    return true
-  end
-  _joystickAxisCache[key] = value
-  return false
-end
-
 local joystickAction = {
   type = "joystick",
   joystickId = 0,
@@ -336,19 +314,27 @@ local function _identJoystick(joystick)
   return joystick:getName() .. " " .. id .. " " .. inst
 end
 
+local _joystickAxisDeadzone = 0.18
+
+local function _deadzoneAxis(x)
+  return math.abs(x) >= _joystickAxisDeadzone and x or 0
+end
+
 function love.joystickaxis(joystick, axis, value)
-  if dedupeJoystickAxis(joystick, axis, value) then return end
+  -- if dedupeJoystickAxis(joystick, axis, value) then return end
+  -- value = _deadzone(math.round0(value / 0.1) * 0.1)
+  value = _deadzoneAxis(value)
   JoystickDebug.println(_identJoystick(joystick) .. " axis " .. axis .. " " .. tostring(value))
   updateWorld(toJoystickAction(joystick, "axis", axis, value))
 end
 
 function love.joystickpressed(joystick, button)
-  JoystickDebug.println("pressed " .. button)
+  JoystickDebug.println(_identJoystick(joystick) .. " pressed " .. button)
   updateWorld(toJoystickAction(joystick, "button", button, 1))
 end
 
 function love.joystickreleased(joystick, button)
-  JoystickDebug.println("releaseed " .. button)
+  JoystickDebug.println(_identJoystick(joystick) .. " releaseed " .. button)
   updateWorld(toJoystickAction(joystick, "button", button, 0))
 end
 
