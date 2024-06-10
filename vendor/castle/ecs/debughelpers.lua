@@ -1,4 +1,4 @@
-Comp = require 'castle.ecs.component'
+local Comp = require 'castle.ecs.component'
 
 function entityDebugString(e)
   local s = entityName(e) .. ": " .. "\n"

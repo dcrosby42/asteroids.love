@@ -1,14 +1,14 @@
-Comp = require 'castle.ecs.component'
-Entity = require 'castle/ecs/entity'
+local Comp = require 'castle.ecs.component'
+local Entity = require 'castle.ecs.entity'
+local Indexer = require 'castle.ecs.indexer'
 require 'castle.ecs.debughelpers'
-Indexer = require 'castle.ecs.indexer'
 
 
 
 local Estore = {}
 
 function Estore:new(o)
-  local o = o or {
+  o = o or {
     eidCounter = 1,
     cidCounter = 1,
     comps = {},
