@@ -293,14 +293,14 @@ local joystickAction = {
   value = 0,
   controlMap = Joystick.DefaultControlMap,
 }
-local function toJoystickAction(joystick, controlType, control, value)
+local function toJoystickAction(joystick, controlType, control, value, controlMap)
+  controlMap = controlMap or Joystick.getControlMapForJoystick(joystick)
+
   joystickAction.joystickId, joystickAction.instanceId = joystick:getID()
   joystickAction.name = joystick:getName()
   joystickAction.controlType = controlType
   joystickAction.control = control
   joystickAction.value = (value or 0)
-  local controlMap = Joystick.getControlMap(joystickAction.name)
-  -- joystickAction.controlMapName = controlMap.name
   if controlType == "button" then
     joystickAction.controlName = controlMap.buttonNames[control]
   elseif controlType == "axis" then
@@ -309,32 +309,25 @@ local function toJoystickAction(joystick, controlType, control, value)
   return joystickAction
 end
 
-local function _identJoystick(joystick)
+local function joydbg(joystick, msg)
   local id, inst = joystick:getID()
-  return joystick:getName() .. " " .. id .. " " .. inst
-end
-
-local _joystickAxisDeadzone = 0.18
-
-local function _deadzoneAxis(x)
-  return math.abs(x) >= _joystickAxisDeadzone and x or 0
+  JoystickDebug.println(joystick:getName() .. " " .. id .. " " .. inst .. ": " .. msg)
 end
 
 function love.joystickaxis(joystick, axis, value)
-  -- if dedupeJoystickAxis(joystick, axis, value) then return end
-  -- value = _deadzone(math.round0(value / 0.1) * 0.1)
-  value = _deadzoneAxis(value)
-  JoystickDebug.println(_identJoystick(joystick) .. " axis " .. axis .. " " .. tostring(value))
-  updateWorld(toJoystickAction(joystick, "axis", axis, value))
+  local controlMap = Joystick.getControlMapForJoystick(joystick)
+  value = Joystick.groomAxisValue(controlMap, axis, value)
+  joydbg(joystick, "axis " .. axis .. " " .. tostring(value))
+  updateWorld(toJoystickAction(joystick, "axis", axis, value, controlMap))
 end
 
 function love.joystickpressed(joystick, button)
-  JoystickDebug.println(_identJoystick(joystick) .. " pressed " .. button)
+  joydbg(joystick, "pressed " .. button)
   updateWorld(toJoystickAction(joystick, "button", button, 1))
 end
 
 function love.joystickreleased(joystick, button)
-  JoystickDebug.println(_identJoystick(joystick) .. " releaseed " .. button)
+  joydbg(joystick, "released " .. button)
   updateWorld(toJoystickAction(joystick, "button", button, 0))
 end
 
