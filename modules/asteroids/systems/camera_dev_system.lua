@@ -2,6 +2,7 @@ local TweenHelpers = require "castle.tween.tween_helpers"
 local ZoomFactor = 0.2
 local RotFactor = math.pi / 8
 local TweenTime = 0.3
+local Debug = (require "mydebug").sub("camera_dev_system", true, true)
 
 local function tweenit(e, compProps, timerName)
   TweenHelpers.addTweens(e, timerName, compProps, {
@@ -12,6 +13,7 @@ end
 
 local function zoomCameraTo(camera, zoom)
   tweenit(camera, { tr = { sx = zoom, sy = zoom } }, "zoom")
+  Debug.println("zoomCameraTo " .. tostring(zoom))
 end
 
 local function zoomCameraIn(camera, factor)
@@ -26,6 +28,7 @@ end
 
 local function rotateCameraTo(camera, rot)
   tweenit(camera, { tr = { r = rot } }, "tr.r")
+  Debug.println("rotateCameraTo " .. tostring(rot))
 end
 
 local function rotateCameraBy(camera, rot)

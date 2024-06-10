@@ -1,5 +1,7 @@
 local withTransform = require("castle.drawing.with_transform")
 local BGColorSystem = require("castle.drawing.bgcolor_system")
+local ViewportHelpers = require "castle.ecs.viewport_helpers"
+local findOwningViewportCam = ViewportHelpers.findOwningViewportCamera
 
 local function withStencil(box, callback)
   love.graphics.stencil(function()
@@ -39,20 +41,6 @@ local function withViewportCameraTransform(vpE, camE, callback)
   love.graphics.pop()
 end
 
-local function findOwningViewportCam(e, estore)
-  if not e then
-    return nil
-  elseif e.viewport then
-    local camName = e.viewport.camera
-    if camName then
-      return estore:getEntityByName(camName)
-    end
-    return nil
-  else
-    return findOwningViewportCam(e:getParent(), estore)
-  end
-end
-
 -- Compute the DRAWABLE location x,y of an entity based on its tr comp,
 -- accounting for paralax factors parax,paray (if non-1).
 -- Paralax is computed relative to the current location of the camera as determined
@@ -72,7 +60,7 @@ local function computeLocWithParalax(e, estore)
   if not e.tr then return 0, 0 end
   local x, y = e.tr.x, e.tr.y
   if e.tr.parax ~= 1 or e.tr.paray ~= 1 then
-    local camera = findOwningViewportCam(e, estore)
+    local camera = findOwningViewportCam(e)
     if camera then
       local dx = camera.tr.x - e.tr.x
       local dy = camera.tr.y - e.tr.y
