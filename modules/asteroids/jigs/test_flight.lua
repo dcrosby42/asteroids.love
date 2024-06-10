@@ -4,6 +4,7 @@ local Explosion = require "modules.asteroids.entities.explosion"
 local Roids = require "modules.asteroids.entities.roids"
 local EventHelpers = require "castle.systems.eventhelpers"
 local Comps = require "castle.components"
+local inspect = require "inspect"
 
 local min = math.min
 local sin = math.sin
@@ -58,7 +59,13 @@ local function controlShip(ship, estore, input, res)
   end)
 end
 
-Comps.define('ship_controller', { 'turn', 0, 'accel', 0, 'fire_gun', 0 })
+-- Comps.define('ship_controller', { 'turn', 0, 'accel', 0, 'fire_gun', 0 })
+Comps.define('ship_controller', {
+  'dx', 0,
+  'dy', 0,
+  'turn', 0,
+  'accel', 0,
+  'fire_gun', 0 })
 
 local function updateShipKeyboardControls(ship)
   local con = ship.ship_controller
@@ -89,13 +96,9 @@ local function updateShipKeyboardControls(ship)
   end
 end
 
-local inspect = require "inspect"
-local function updateShipJoystickControls(ship, input)
+
+local function _updateShipJoystickControls(ship, input)
   local con = ship.ship_controller
-
-  -- local turn = 0
-  -- local fire_gun = 0
-
   EventHelpers.on(input.events, "controller", function(evt)
     print(inspect(evt))
     if evt.action == "leftx" then
@@ -106,26 +109,21 @@ local function updateShipJoystickControls(ship, input)
     end
     if evt.action == "face1" then
       con.fire_gun = evt.value
-      -- con.fire_gun = (evt.value > 0 and 1)
     end
-    --   turn = evt.value
-    -- end
   end)
-  -- print(con.turn)
-  -- if ship.keystate.held.left then
-  --   turn = turn - 1
-  -- end
-  -- if ship.keystate.held.right then
-  --   turn = turn + 1
-  -- end
-  -- if ship.keystate.held.up then
-  --   accel = accel + 1
-  -- end
-  -- if ship.keystate.pressed.space then
-  --   con.fire_gun = 1
-  -- else
-  --   con.fire_gun = 0
-  -- end
+end
+
+local function updateShipJoystickControls(ship, input)
+  local conState = ship.controller_state
+  local shipCon = ship.ship_controller
+
+  shipCon.turn = conState.value.leftx or 0
+  shipCon.accel = -(conState.value.lefty or 0)
+  if conState.pressed.face1 then
+    shipCon.fire_gun = 1
+  else
+    shipCon.fire_gun = 0
+  end
 end
 
 local function controlShip2(ship, estore, input, res)
@@ -314,7 +312,7 @@ function TestFlightJig.update(estore, input, res)
 
   local ship = estore:getEntityByName("ship")
   -- controlShip(ship, estore, input, res)
-  updateShipKeyboardControls(ship)
+  -- updateShipKeyboardControls(ship)
   updateShipJoystickControls(ship, input)
   controlShip2(ship, estore, input, res)
   moveShip(ship)

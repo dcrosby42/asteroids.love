@@ -117,10 +117,11 @@ end
 
 function Ship.ship(parent, res)
   local ship = parent:newEntity({
-    { "tr",              {} },
-    { "name",            { name = "ship" } },
-    { "vel",             {} },
-    { "ship_controller", {} }
+    { "tr",               {} },
+    { "name",             { name = "ship" } },
+    { "vel",              {} },
+    { "controller_state", { match_id = "joystick1" } },
+    { "ship_controller",  {} },
   })
   ship:newEntity({
     { "tag", { name = "gun_muzzle" } },

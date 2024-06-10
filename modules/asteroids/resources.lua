@@ -17,6 +17,7 @@ return {
           "castle.systems.touchbutton",
           "castle.systems.tween",
           "castle.systems.keystate",
+          "castle.systems.controller_state",
           "modules.asteroids.systems.devsystem",
           "modules.asteroids.systems.ship_workbench_system",
           "modules.asteroids.systems.camera_dev_system",
