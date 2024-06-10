@@ -76,6 +76,31 @@ SpriteConfigs.huge = {
   { picId = "roid_large_grey_03", size = 2.75 },
 }
 
+local LargeRadius = 65
+local SizeCatRadiusMap = {
+  small = LargeRadius * ScaleLarge2Small,
+  medium = LargeRadius / ScaleMed2Lg,
+  medium_large = 3 * LargeRadius * ScaleLarge2Small,
+  large = LargeRadius,
+  huge = 2.75 * LargeRadius,
+}
+local function radiusForSizeCat(sizeCat)
+  return SizeCatRadiusMap[sizeCat]
+end
+
+
+local SizeCatHPMap = {
+  small = 1,
+  medium = 2,
+  medium_large = 3,
+  large = 6,
+  huge = 12,
+}
+local function hpForSizeCat(sizeCat)
+  return SizeCatHPMap[sizeCat]
+end
+
+
 function Roids.roid(parent, opts)
   opts = opts or {}
   if not opts.picId then
@@ -85,10 +110,13 @@ function Roids.roid(parent, opts)
   opts.color = opts.color or { 1, 1, 1 }
   opts.x = opts.x or 0
   opts.y = opts.y or 0
+  opts.radius = opts.radius or 65
+  opts.hp = opts.hp or 6
   local roid = parent:newEntity({
     { "name", { name = opts.name } },
     { "tag",  { name = "roid" } },
-    { 'tr',   { x = opts.x, y = opts.x, } },
+    { 'tr',   { x = opts.x, y = opts.y, } },
+    { "vel",  {} },
     { 'pic', {
       id = opts.picId,
       cx = 0.5,
@@ -98,8 +126,8 @@ function Roids.roid(parent, opts)
       color = opts.color,
       debug = false,
     } },
-    { 'radius', { radius = 65, debug = false } },
-    { "health", { hp = 6 } },
+    { 'radius', { radius = opts.radius, debug = false } },
+    { "health", { hp = opts.hp } },
   })
   if opts.name then
     roid:newComp("name", { name = opts.name })
@@ -116,6 +144,8 @@ function Roids.random(parent, opts)
   local cfg = pickRandom(cat)
   opts.size = cfg.size
   opts.picId = cfg.picId
+  opts.radius = radiusForSizeCat(opts.sizeCat)
+  opts.hp = hpForSizeCat(opts.sizeCat)
   opts.sizeCat = nil
   return Roids.roid(parent, opts)
 end

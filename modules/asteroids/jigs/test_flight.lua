@@ -127,6 +127,14 @@ local function moveShipBullets(estore, input, res)
   end
 end
 
+local function moveRoids(estore, input, res)
+  for _, e in ipairs(estore:indexLookupAll("byTag", "roid")) do
+    e.tr.x = e.tr.x + (e.vel.dx * input.dt)
+    e.tr.y = e.tr.y + (e.vel.dy * input.dt)
+    e.tr.r = e.tr.r + (e.vel.angularvelocity * input.dt)
+  end
+end
+
 local function addRoid(parent, sizeCat, x, y, opts)
   opts = opts or {}
   local roid = Roids.random(parent, {
@@ -135,6 +143,12 @@ local function addRoid(parent, sizeCat, x, y, opts)
     y = y,
   })
   nameEnt(roid, opts.name)
+  -- roid.radius.debug = true
+
+  roid.vel.angularvelocity = randomFloat(-pi / 2, pi / 2)
+  roid.vel.dx = randomFloat(-30, 30)
+  roid.vel.dy = randomFloat(-30, 30)
+
   return roid
 end
 
@@ -167,7 +181,23 @@ function TestFlightJig.init(parent, estore, res)
   Ship.dev_background_nebula_blue(jig, res)
   Ship.dev_background_starfield1(jig, res)
 
-  addRoid(jig, "large", -300, 200, { name = "r1" })
+  -- addRoid(jig, "large", -300, 200, { name = "r1" })
+  do
+    -- 4096 x 4
+    local min, max = -4000, 4000
+    -- local min, max = -300, 300
+    local kinds = { "small", "medium", "medium_large", "large", "huge" }
+    -- local kinds = { "medium", "medium_large" }
+    -- local kinds = { "medium_large" }
+    local numRoids = 100
+    for i = 1, numRoids do
+      local x = randomInt(min, max)
+      local y = randomInt(min, max)
+      local sizeCat = pickRandom(kinds)
+      addRoid(jig, sizeCat, x, y)
+    end
+  end
+
 
   local ship = Ship.ship(jig, res)
   ship:newComp("keystate", { handle = { "left", "right", "up", "down", "space" } })
@@ -227,6 +257,7 @@ local function collideBulletsAndRoids(jig)
     if not bulletsRemoved[bullet.eid] then
       for j = 1, #roids do
         local roid = roids[j]
+        assert(bullet.radius)
         local range = bullet.radius.radius + roid.radius.radius
         local dist = Vec.dist(
           roid.tr.x + roid.radius.x, roid.tr.y + roid.radius.y,
@@ -237,22 +268,15 @@ local function collideBulletsAndRoids(jig)
 
           bulletHitsRoid(bullet, roid)
 
-          bulletsRemoved[bullet.eid] = true
-          bullet:destroy()
+          bulletsRemoved[bullet.eid] = bullet
         end
       end
     end
   end
 
-  for _, roid in pairs(roidsHit) do
-    -- destroyRoid(roid)
+  for _, bullet in pairs(bulletsRemoved) do
+    bullet:destroy()
   end
-
-  -- for _,roidHit in pairs(hits) do
-  --   -- print("hit: zone=" .. tostring(hits[i][3]) .. " dist=" .. tostring(hits[i][4]))
-  --   for _,bullet
-  --   hits[i][2]:destroy()
-  -- end
 end
 
 function TestFlightJig.update(estore, input, res)
@@ -278,6 +302,8 @@ function TestFlightJig.update(estore, input, res)
   moveShip(ship)
 
   moveShipBullets(estore, input, res)
+
+  moveRoids(estore, input, res)
 
   -- Animate ship flame
   estore:seekEntity(matchShipFlame, function(flameE)

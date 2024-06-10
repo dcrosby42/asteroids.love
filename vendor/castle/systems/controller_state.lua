@@ -29,13 +29,9 @@ return defineUpdateSystem({ "controller_state" },
         if evt.value == 0 then
           con.released[evt.action] = true
           con.held[evt.action] = nil
-          print(inspect(evt))
-          print(inspect(con))
         else
           con.pressed[evt.action] = not con.held[evt.action]
           con.held[evt.action] = true
-          print(inspect(evt))
-          print(inspect(con))
         end
         return true -- consume event
       end
