@@ -48,7 +48,7 @@ return {
       },
       -- Any lazy_load resources are eager-loaded when their game module is loaded.
       -- (as distinct from app startup time)
-      realize_on_module_load = false,
+      realize_on_module_load = true,
     },
   },
   -- {

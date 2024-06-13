@@ -46,7 +46,7 @@ local function clearErrorMode()
 end
 
 local function loadItUp(opts)
-  if not opts then opts = {} end
+  opts = opts or {}
   Config = tcopy(DefaultConfig)
   if Castle.module_name then
     RootModule = ModuleLoader.load(Castle.module_name)
@@ -99,7 +99,10 @@ local function reloadRootModule(newWorldOpts)
   end
 end
 
-function love.load()
+CLI_ARGS = {}
+
+function love.load(args)
+  CLI_ARGS = args
   loadItUp()
 end
 

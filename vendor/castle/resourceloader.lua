@@ -315,6 +315,10 @@ function R.settings(res)
 end
 
 function R.shouldRealizeOnModuleLoad(res)
+  if lcontains(CLI_ARGS, "--lazy-resources") then
+    print("ResourceLoader.shouldRealizeOnModuleLoad: --lazy-resources cli arg forces deferred resource loads")
+    return false
+  end
   return R.settings(res).realize_on_module_load
 end
 
