@@ -115,7 +115,7 @@ local function controlShip2(ship, estore, input, res)
 
       -- set cooldown
       State.set(ship, "fire_control", "cooldown")
-      ship:newComp("timer", { name = "gun_cooldown", t = 0.2 })
+      ship:newComp("timer", { name = "gun_cooldown", t = 0.05 })
     end
   else
     if ship.timers and ship.timers.gun_cooldown then
