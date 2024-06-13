@@ -1,5 +1,8 @@
 local M = {}
 
+-- Given an entity in a "scene graph" hierarchy, walk upward looking for
+-- a viewport entity.  Once found, lookup the associated camera entity currently
+-- associated with the viewport.
 function M.findOwningViewportCamera(e)
   if not e then
     return nil

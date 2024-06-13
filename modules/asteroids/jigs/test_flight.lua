@@ -49,7 +49,7 @@ local function updateShipKeyboardControls(ship)
   end
   con.accel = accel
 
-  if ship.keystate.pressed.space then
+  if ship.keystate.held.space then
     con.fire_gun = 1
   else
     con.fire_gun = 0
@@ -64,7 +64,7 @@ local function updateShipJoystickControls(ship, input)
 
   shipCon.turn = conState.value.leftx or 0
   shipCon.accel = -(conState.value.lefty or 0)
-  if conState.pressed.face1 then
+  if conState.held.face1 then
     shipCon.fire_gun = 1
   else
     shipCon.fire_gun = 0
@@ -96,11 +96,32 @@ local function controlShip2(ship, estore, input, res)
       ship.vel.dy = min(ship.vel.dy + dy)
     end
   end
-  if con.fire_gun > 0 then
-    Ship.fireBullet(ship, "left", "ship_bullets_04", -1500)
-    local bullet = Ship.fireBullet(ship, "right", "ship_bullets_04", -1500)
 
-    bullet:newComp("sound", { sound = "laser_small" })
+  -- Fire control
+  if ship.timers and ship.timers.gun_cooldown then
+    if ship.timers.gun_cooldown.alarm then
+      State.set(ship, "fire_control", "ready")
+      ship:removeComp(ship.timers.gun_cooldown)
+    end
+  end
+  if con.fire_gun > 0 then
+    if State.get(ship, "fire_control") == "ready" then
+      -- left
+      Ship.fireBullet(ship, "left", "ship_bullets_04", -1500)
+      -- right
+      local bullet = Ship.fireBullet(ship, "right", "ship_bullets_04", -1500)
+      -- (pin the sound to the right bullet... prolly should be its own, but for now let's just mooch off the laser's natural lifespan)
+      bullet:newComp("sound", { sound = "laser_small" })
+
+      -- set cooldown
+      State.set(ship, "fire_control", "cooldown")
+      ship:newComp("timer", { name = "gun_cooldown", t = 0.2 })
+    end
+  else
+    if ship.timers and ship.timers.gun_cooldown then
+      State.set(ship, "fire_control", "ready")
+      ship:removeComp(ship.timers.gun_cooldown)
+    end
   end
 
   -- Show ship flame only when thrust active
