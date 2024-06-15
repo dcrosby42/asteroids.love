@@ -7,6 +7,8 @@ local State = require "castle.state"
 local ViewportHelpers = require "castle.ecs.viewport_helpers"
 local findOwningViewportCam = ViewportHelpers.findOwningViewportCamera
 
+local Cooldown = require "modules.asteroids.systems.cooldown"
+
 local Comps = require "castle.components"
 
 local inspect = require "inspect"
@@ -98,29 +100,17 @@ local function controlShip2(ship, estore, input, res)
   end
 
   -- Fire control
-  if ship.timers and ship.timers.gun_cooldown then
-    if ship.timers.gun_cooldown.alarm then
-      State.set(ship, "fire_control", "ready")
-      ship:removeComp(ship.timers.gun_cooldown)
-    end
-  end
   if con.fire_gun > 0 then
-    if State.get(ship, "fire_control") == "ready" then
-      -- left
+    if Cooldown.isReady(ship, "lasers") then
+      -- FIRE
+      -- left gun
       Ship.fireBullet(ship, "left", "ship_bullets_04", -1500)
-      -- right
+      -- right gun
       local bullet = Ship.fireBullet(ship, "right", "ship_bullets_04", -1500)
       -- (pin the sound to the right bullet... prolly should be its own, but for now let's just mooch off the laser's natural lifespan)
       bullet:newComp("sound", { sound = "laser_small" })
 
-      -- set cooldown
-      State.set(ship, "fire_control", "cooldown")
-      ship:newComp("timer", { name = "gun_cooldown", t = 0.05 })
-    end
-  else
-    if ship.timers and ship.timers.gun_cooldown then
-      State.set(ship, "fire_control", "ready")
-      ship:removeComp(ship.timers.gun_cooldown)
+      Cooldown.trigger(ship, "lasers")
     end
   end
 

@@ -122,7 +122,7 @@ function Ship.ship(parent, res)
     { "vel",              {} },
     { "controller_state", { match_id = "joystick1" } },
     { "ship_controller",  {} },
-    { "state",            { name = "fire_control", value = "ready" } },
+    { "cooldown",         { name = "lasers", t = 0.05, state = "ready" } }
   })
   ship:newEntity({
     { "tag", { name = "gun_muzzle" } },
