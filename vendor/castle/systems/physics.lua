@@ -336,10 +336,6 @@ function newJoint(pw, jointComp, e, estore, objCache)
       inspect(jointComp))
   end
   local toComp = toEnt.body
-  -- estore:seekEntity(hasTag(jointComp.to), function(e)
-  --   toComp = e.body
-  --   return true
-  -- end)
   Debug.println("toComp: " .. inspect(toComp))
 
   local from = objCache[fromComp.cid]
