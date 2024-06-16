@@ -83,6 +83,15 @@ function defineUpdateSystem(matchSpec, fn)
   end
 end
 
+function defineDrawSystem(matchSpec, fn)
+  local matchFn = matchSpecToFn(matchSpec)
+  return function(estore, res)
+    estore:walkEntities(matchFn, function(e)
+      fn(e, estore, res)
+    end)
+  end
+end
+
 -- Use new-style query args to define an update system
 function defineQuerySystem(queryArgs, fn)
   local query = Query.create(queryArgs)
@@ -94,12 +103,14 @@ function defineQuerySystem(queryArgs, fn)
   end
 end
 
-function defineDrawSystem(matchSpec, fn)
-  local matchFn = matchSpecToFn(matchSpec)
+-- Use new-style query args to define a draw system
+function defineQueryDrawSystem(queryArgs, fn)
+  local query = Query.create(queryArgs)
   return function(estore, res)
-    estore:walkEntities(matchFn, function(e)
-      fn(e, estore, res)
-    end)
+    local ents = query(estore)
+    for i = 1, #ents do
+      fn(ents[i], estore, res)
+    end
   end
 end
 

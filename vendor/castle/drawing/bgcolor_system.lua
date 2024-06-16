@@ -1,5 +1,9 @@
+local Query = require "castle.ecs.query"
+
+local BgcolorQuery = Query.create("bgcolor")
+
 return function(estore, res)
-  local e = estore:findEntity(hasComps("bgcolor"))
+  local e = estore:queryFirstEntity(BgcolorQuery)
   if e then
     love.graphics.setBackgroundColor(e.bgcolor.color)
   else

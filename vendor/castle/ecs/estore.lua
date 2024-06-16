@@ -370,6 +370,14 @@ function Estore:findEntity(matchFn)
   return found
 end
 
+function Estore:queryEntities(query)
+  return query(self)
+end
+
+function Estore:queryFirstEntity(query)
+  return query(self)[1]
+end
+
 function Estore:getEntityByName(name)
   if not name then error("Estore:getEntityByName: name is required") end
   if name == '' then error("Estore:getEntityByName: name can't be blank") end
