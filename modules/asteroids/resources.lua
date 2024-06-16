@@ -89,7 +89,10 @@ return {
   {
     type = "sound",
     name = "laser_small",
-    data = { file = "modules/asteroids/sounds/laser_small.wav", },
+    data = {
+      file = "modules/asteroids/sounds/laser_small.wav",
+      volume = 0.5,
+    },
   },
 
   -- {
