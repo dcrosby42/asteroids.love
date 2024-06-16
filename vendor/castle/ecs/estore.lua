@@ -178,7 +178,7 @@ function Estore:addComp(e, comp)
 end
 
 -- Detach a component from the given entity.
--- Use this method if you plan to move a comp from one entity to another.
+-- This method is invoked just before component removal, or before transferring to another entity.
 -- The comp will remain in the comps cache, and will NOT be released back to its object pool.
 function Estore:detachComp(e, comp)
   if e then
@@ -194,13 +194,18 @@ function Estore:detachComp(e, comp)
     end
 
     -- If this comp was the singular comp ref, pick a different comp (or nil) to replace it:
+    local noMoreOfThisType = false
     if e[key] and e[key].cid == comp.cid then
       local _, val = next(e[keyp], nil) -- pluck any comp from the plural ref
       e[key] = val                      -- will either be another comp or nil, if there weren't any more
       if not val then
-        e[keyp] = nil                   -- plural ref was empty, clean it out
+        -- This was the last comp of its type in this entity
+        e[keyp] = nil -- remove the plurals ref map
+        noMoreOfThisType = true
       end
     end
+
+    self:_deindexComp(comp, noMoreOfThisType) -- de-index the comp (removes eid from any indexes created by this comp)
 
     if comp.type == "parent" then
       self:_deparent(e)
@@ -229,9 +234,6 @@ function Estore:removeComp(comp)
     print("!! Estore:removeComp BAD EID comp=" .. Comp.debugString(comp))
     return
   end
-
-  -- de-index the comp (removes eid from any indexes created by this comp)
-  self:_deindexComp(comp)
 
   self:detachComp(self.ents[comp.eid], comp)
 
@@ -382,6 +384,10 @@ function Estore:getEntityByName(name)
   return ent
 end
 
+function Estore:getEntitiesByCompType(compType)
+  return self:indexLookupAll("__byCompType", compType)
+end
+
 -- Indexed entity lookup, eg ("byName","workbench")
 -- Intended for use where the key is expected to match just one entity.
 -- If there are indeed several, only the FIRST entity maching the key is returned.
@@ -389,12 +395,7 @@ function Estore:indexLookupFirst(indexName, key)
   if self.enableIndexing then
     local eids = self.indexes[indexName][key]
     if eids and #eids > 0 then
-      local eid = eids[1]
-      local ent = self.ents[eid]
-      if ent then
-        -- print("Estore:indexLookupFirst OK " .. indexName .. ", " .. key .. ": " .. eid)
-        return ent
-      end
+      return self.ents[eids[1]]
     end
   end
   return nil
@@ -490,9 +491,9 @@ function Estore:_indexComp(comp)
   end
 end
 
-function Estore:_deindexComp(comp)
+function Estore:_deindexComp(comp, noMoreOfThisType)
   if self.enableIndexing then
-    Indexer.deindexComp(self.indexConfigs, self.indexes, comp)
+    Indexer.deindexComp(self.indexConfigs, self.indexes, comp, noMoreOfThisType)
   end
 end
 
