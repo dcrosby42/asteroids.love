@@ -145,12 +145,8 @@ local physicsSystem = defineQuerySystem(
           e.tr.x = x
           e.tr.y = y
           e.tr.r = b:getAngle()
-        elseif e.pos then
-          e.pos.x = x
-          e.pos.y = y
-          e.pos.r = b:getAngle()
         else
-          error("Need a pos or a tr")
+          error("physicsSystem: Need a tr")
         end
         if e.vel then
           local dx, dy = b:getLinearVelocity()
