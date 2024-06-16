@@ -11,7 +11,7 @@ Comps.define("controller_state", {
 })
 
 
-return defineUpdateSystem({ "controller_state" },
+return defineQuerySystem("controller_state",
   function(e, estore, input, res)
     local con = e.controller_state
 

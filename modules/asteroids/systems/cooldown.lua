@@ -1,5 +1,6 @@
 Comps = require "castle.components"
 State = require "castle.state"
+Query = require "castle.ecs.query"
 
 
 Comps.define('cooldown', {
@@ -37,7 +38,12 @@ function Cooldown.trigger(e, name)
   _start(e, e.cooldowns and e.cooldowns[name], e.timers and e.timers[name])
 end
 
-Cooldown.system = defineUpdateSystem("cooldown",
+local query = Query.create({
+  indexLookup = { name = "byCompType", key = "cooldown" }
+})
+
+Cooldown.system = defineQuerySystem(
+  "cooldown",
   function(e, estore, input, res)
     for _, cooldown in pairs(e.cooldowns) do
       local name = cooldown.name

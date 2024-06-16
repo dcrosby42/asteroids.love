@@ -17,7 +17,8 @@ local function lookupEntCompKeyByPath(e, path)
   return cur, comp, key
 end
 
-local effectSystem = defineUpdateSystem({ 'effect', 'timer' },
+local effectSystem = defineQuerySystem(
+  { 'effect', 'timer' },
   function(e, estore, input, res)
     local effect = e.effect
     -- local data = effect.data

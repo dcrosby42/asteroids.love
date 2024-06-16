@@ -132,14 +132,14 @@ local function moveShip(ship)
 end
 
 local function moveShipBullets(estore, input, res)
-  for _, e in ipairs(estore:indexLookupAll("byTag", "ship_bullet")) do
+  for _, e in ipairs(estore:indexLookup("byTag", "ship_bullet")) do
     e.tr.x = e.tr.x + (e.vel.dx * input.dt)
     e.tr.y = e.tr.y + (e.vel.dy * input.dt)
   end
 end
 
 local function moveRoids(estore, input, res)
-  for _, e in ipairs(estore:indexLookupAll("byTag", "roid")) do
+  for _, e in ipairs(estore:indexLookup("byTag", "roid")) do
     e.tr.x = e.tr.x + (e.vel.dx * input.dt)
     e.tr.y = e.tr.y + (e.vel.dy * input.dt)
     e.tr.r = e.tr.r + (e.vel.angularvelocity * input.dt)

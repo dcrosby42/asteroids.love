@@ -5,7 +5,8 @@ local function shouldHandle(keyst, key)
   return lcontains(keyst.handle, key)
 end
 
-return defineUpdateSystem({ "keystate" },
+return defineQuerySystem(
+  "keystate",
   function(e, estore, input, res)
     local keyst = e.keystate
     -- reset "pressed" state:

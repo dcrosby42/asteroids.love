@@ -36,7 +36,8 @@ local function rotateCameraBy(camera, rot)
   rotateCameraTo(camera, r)
 end
 
-return defineUpdateSystem(hasTag('camera_dev_controller'),
+return defineQuerySystem(
+  { tag = 'camera_dev_controller' },
   function(e, estore, input, res)
     local camera = estore:getEntityByName(e.states.camera.value)
     if not camera then return end

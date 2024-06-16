@@ -15,7 +15,8 @@ local P = love.physics
 
 local _CollisionBuffer
 -- Creates and maintains a physics simulation for entities that have body components.
-local physicsSystem = defineUpdateSystem({ "physicsWorld" },
+local physicsSystem = defineQuerySystem(
+  "physicsWorld",
   function(physEnt, estore, input, res)
     local oc = estore:getCache("physics")
     local worlds = estore:getCache("physicsWorlds")

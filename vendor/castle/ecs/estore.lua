@@ -385,7 +385,7 @@ function Estore:getEntityByName(name)
 end
 
 function Estore:getEntitiesByCompType(compType)
-  return self:indexLookupAll("__byCompType", compType)
+  return self:indexLookup("byCompType", compType)
 end
 
 -- Indexed entity lookup, eg ("byName","workbench")
@@ -393,7 +393,7 @@ end
 -- If there are indeed several, only the FIRST entity maching the key is returned.
 function Estore:indexLookupFirst(indexName, key)
   if self.enableIndexing then
-    local eids = self.indexes[indexName][key]
+    local eids = Indexer.lookup(self.indexes, indexName, key)
     if eids and #eids > 0 then
       return self.ents[eids[1]]
     end
@@ -404,9 +404,9 @@ end
 -- Indexed entity lookup, eg ("byTag","roid")
 -- Returns a list of entities matching the key.
 -- Returns empty list for no match
-function Estore:indexLookupAll(indexName, key)
+function Estore:indexLookup(indexName, key)
   if self.enableIndexing then
-    local eids = self.indexes[indexName][key]
+    local eids = Indexer.lookup(self.indexes, indexName, key)
     if eids and #eids > 0 then
       return map(eids, function(eid) return self.ents[eid] end)
     end

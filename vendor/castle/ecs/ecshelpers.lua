@@ -1,7 +1,7 @@
-local inspect = require('inspect')
+local Predicates = require "castle.ecs.predicates"
+local Query = require "castle.ecs.query"
 
-local ResourceLoader = require "castle.resourceloader"
-
+-- TODO: phase this out of usage
 function requireModules(reqs)
   local modules = {}
   for i, req in ipairs(reqs) do
@@ -56,60 +56,6 @@ function composeDrawSystems(systems, resRoot)
   end
 end
 
-function hasComps(...)
-  local ctypes = { ... }
-  local num = #ctypes
-  if num == 0 then
-    return function(e)
-      return true
-    end
-  elseif num == 1 then
-    return function(e)
-      return e[ctypes[1]] ~= nil
-    end
-  elseif num == 2 then
-    return function(e)
-      return e[ctypes[1]] ~= nil and e[ctypes[2]] ~= nil
-    end
-  elseif num == 3 then
-    return function(e)
-      return e[ctypes[1]] ~= nil and e[ctypes[2]] and e[ctypes[3]] ~= nil
-    end
-  elseif num == 4 then
-    return function(e)
-      return e[ctypes[1]] ~= nil and e[ctypes[2]] and e[ctypes[3]] ~= nil and
-          e[ctypes[4]] ~= nil
-    end
-  else
-    return function(e)
-      for _, ctype in ipairs(ctypes) do if e[ctype] == nil then return end end
-      return true
-    end
-  end
-end
-
-function hasTag(tagname)
-  return function(e)
-    return e.tags and e.tags[tagname]
-  end
-end
-
-function hasName(name)
-  return function(e)
-    return e.name and e.name.name == name
-  end
-end
-
-function allOf(...)
-  local matchers = { ... }
-  return function(e)
-    for _, matchFn in ipairs(matchers) do
-      if not matchFn(e) then return false end
-    end
-    return true
-  end
-end
-
 function addInputEvent(input, evt)
   if not input.events[evt.type] then input.events[evt.type] = {} end
   table.insert(input.events[evt.type], evt)
@@ -120,22 +66,31 @@ function setParentEntity(estore, childE, parentE, order)
   estore:newComp(childE, "parent", { parentEid = parentE.eid, order = order })
 end
 
-local function matchSpecToFn(matchSpec)
-  if type(matchSpec) == "function" then
-    return matchSpec
-  elseif type(matchSpec) == "string" then
-    return hasComps(matchSpec)
-  else
-    return hasComps(unpack(matchSpec))
-  end
-end
+hasComps = Predicates.hasComps
+hasTag = Predicates.hasTag
+hasName = Predicates.hasName
+allOf = Predicates.allOf
 
+local matchSpecToFn = Predicates.matchSpecToFn
+
+-- old-style: construct a matcher based on matchSpec
 function defineUpdateSystem(matchSpec, fn)
   local matchFn = matchSpecToFn(matchSpec)
   return function(estore, input, res)
     estore:walkEntities(matchFn, function(e)
       fn(e, estore, input, res)
     end)
+  end
+end
+
+-- Use new-style query args to define an update system
+function defineQuerySystem(queryArgs, fn)
+  local query = Query.create(queryArgs)
+  return function(estore, input, res)
+    local ents = query(estore)
+    for i = 1, #ents do
+      fn(ents[i], estore, input, res)
+    end
   end
 end
 

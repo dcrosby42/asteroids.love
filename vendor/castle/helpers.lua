@@ -682,6 +682,18 @@ function memoize2(fn)
   end
 end
 
+function isTable(list)
+  return type(list) == "table"
+end
+
+function isArray(list)
+  return type(list) == "table" and #list > 0
+end
+
+function isNonArrayTable(list)
+  return isTable(list) and not isArray(list)
+end
+
 function tail(list)
   return { select(2, unpack(list)) }
 end

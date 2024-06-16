@@ -1,4 +1,4 @@
-local Debug = require("mydebug").sub("Indexer", true, true)
+local Debug = require("mydebug").sub("Indexer", false, false)
 
 local Indexer = {}
 
@@ -9,6 +9,8 @@ Indexer.DefaultConfigs = {
     enabled = true,
     indexAllTypes = true,
     -- indexSpecificTypes={},
+    -- ? is it useful/safe to narrow the comp types eligible for indexing ?
+    -- excludeTypes={"name","tag","parent","state","circle","box","radius"}
   }
 }
 
@@ -32,7 +34,7 @@ local function _indexByCompType(byCompType, comp)
   if not lcontains(list, comp.eid) then
     -- (only add an eid once. Entities may contain more than one of a certain comp type)
     table.insert(list, comp.eid)
-    Debug.println("Add: __byCompType " .. comp.type .. " -> " .. comp.eid)
+    Debug.println("Add: byCompType " .. comp.type .. " -> " .. comp.eid)
   end
 end
 
@@ -42,7 +44,7 @@ local function _deindexByCompType(byCompType, comp)
     local i = lindexof(list, comp.eid)
     if i then
       table.remove(list, i)
-      Debug.println("Remove: __byCompType " .. comp.type .. " -> " .. comp.eid)
+      Debug.println("Remove: byCompType " .. comp.type .. " -> " .. comp.eid)
     end
   end
 end
@@ -50,8 +52,8 @@ end
 -- initialize the multimaps
 function Indexer.initIndexes(configs)
   local indexTables = {
-    __types = {},      -- set of component types to do indexing for
-    __byCompType = {}, -- SPECIAL CASE: index of comp types to eids
+    __types = {},    -- set of component types to do indexing for
+    byCompType = {}, -- SPECIAL CASE: index of comp types to eids
   }
   for i = 1, #configs do
     indexTables[configs[i].name] = {}
@@ -63,7 +65,7 @@ end
 function Indexer.indexComp(configs, indexTables, comp)
   if shouldIndexByCompType(configs, comp.type) then
     -- Index eid by comp type:
-    _indexByCompType(indexTables.__byCompType, comp)
+    _indexByCompType(indexTables.byCompType, comp)
   end
 
   -- Configured comp-specific eid indexes:
@@ -81,10 +83,12 @@ function Indexer.indexComp(configs, indexTables, comp)
         list = {}
         indexTables[cfg.name][key] = list
       end
-      -- Append the target entity eid to the multimap
-      table.insert(list, comp.eid)
-      Debug.println("Add: " .. cfg.name .. " " .. cfg.compType .. "." ..
-        cfg.propName .. ": " .. key .. " -> " .. comp.eid)
+      if not lcontains(list, comp.eid) then
+        -- Append the target entity eid to the multimap
+        table.insert(list, comp.eid)
+        Debug.println("Add: " .. cfg.name .. " " .. cfg.compType .. "." ..
+          cfg.propName .. ": " .. key .. " -> " .. comp.eid)
+      end
     end
   end
 end
@@ -93,7 +97,7 @@ function Indexer.deindexComp(configs, indexTables, comp, lastOfItsType)
   if lastOfItsType then
     -- Special case: when a comp was removed from an ent and there are no more comps of that type in the entity,
     -- this is when we "deindex" the entity according to this type.
-    _deindexByCompType(indexTables.__byCompType, comp)
+    _deindexByCompType(indexTables.byCompType, comp)
   end
 
   if not indexTables.__types[comp.type] then return end
@@ -124,6 +128,10 @@ function Indexer.reindexAll(configs, comps)
     Indexer.indexComp(configs, maps, comp)
   end
   return maps
+end
+
+function Indexer.lookup(indexTables, indexName, key)
+  return indexTables[indexName][key]
 end
 
 return Indexer
