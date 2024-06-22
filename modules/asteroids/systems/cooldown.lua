@@ -3,11 +3,6 @@ State = require "castle.state"
 Query = require "castle.ecs.query"
 
 
-Comps.define('cooldown', {
-  "t", 1,
-  "state", "ready",
-});
-
 local READY = "ready"
 local COOLDOWN = "cooldown"
 local TRIGGERED = "triggered"

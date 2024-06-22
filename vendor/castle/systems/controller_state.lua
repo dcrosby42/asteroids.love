@@ -10,7 +10,6 @@ Comps.define("controller_state", {
   'released', {}, -- map of control names to "released" state
 })
 
-
 return defineQuerySystem("controller_state",
   function(e, estore, input, res)
     local con = e.controller_state

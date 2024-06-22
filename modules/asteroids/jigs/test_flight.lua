@@ -2,14 +2,12 @@ local Vec = require 'vector-light'
 local Ship = require "modules.asteroids.entities.ship"
 local Explosion = require "modules.asteroids.entities.explosion"
 local Roids = require "modules.asteroids.entities.roids"
--- local EventHelpers = require "castle.systems.eventhelpers"
+
 local State = require "castle.state"
 local ViewportHelpers = require "castle.ecs.viewport_helpers"
 local findOwningViewportCam = ViewportHelpers.findOwningViewportCamera
 
 local Cooldown = require "modules.asteroids.systems.cooldown"
-
-local Comps = require "castle.components"
 
 local inspect = require "inspect"
 
@@ -19,29 +17,18 @@ local pi = math.pi
 
 local TestFlightJig = {}
 
-local matchShipFlame = hasTag("ship_flame")
 
-Comps.define('ship_controller', {
-  'dx', 0,
-  'dy', 0,
-  'turn', 0,
-  'accel', 0,
-  'fire_gun', 0,
-})
 
 -- Use keystate to set ship_controller values
-local function updateShipKeyboardControls(ship)
+local function updateShipController_keyboard(ship)
   local con = ship.ship_controller
 
   local turn = 0
-  local turned = false
   if ship.keystate.held.left then
     turn = turn - 1
-    turned = true
   end
   if ship.keystate.held.right then
     turn = turn + 1
-    turned = true
   end
   con.turn = turn
 
@@ -60,7 +47,7 @@ end
 
 
 -- Use controller_state (joystick) to update ship_controller values
-local function updateShipJoystickControls(ship, input)
+local function updateShipController_gamepad(ship, input)
   local conState = ship.controller_state
   local shipCon = ship.ship_controller
 
@@ -73,8 +60,10 @@ local function updateShipJoystickControls(ship, input)
   end
 end
 
+local ShipFlameQuery = Query.create({ tag = "ship_flame" })
+
 -- Apply ship_controller inputs to the ship
-local function controlShip2(ship, estore, input, res)
+local function applyShipController(ship, estore, input, res)
   local spinSpeed = pi * 1.5
 
   local con = ship.ship_controller
@@ -115,14 +104,15 @@ local function controlShip2(ship, estore, input, res)
   end
 
   -- Show ship flame only when thrust active
-  estore:seekEntity(matchShipFlame, function(flameE)
+  local shipFlame = estore:queryFirstEntity(ShipFlameQuery)
+  if shipFlame then
     if con.accel > 0 then
-      flameE.pic.color[4] = 1
+      shipFlame.pic.color[4] = 1
     else
-      flameE.pic.color[4] = 0
+      shipFlame.pic.color[4] = 0
     end
     return true
-  end)
+  end
 end
 
 -- (testing: motion should be a different system) Apply velocity to get motion
@@ -163,10 +153,20 @@ local function addRoid(parent, sizeCat, x, y, opts)
   return roid
 end
 
+local function generateRoidField(jig, numRoids, min, max)
+  local kinds = { "small", "medium", "medium_large", "large", "huge" }
+  for i = 1, numRoids do
+    local x = randomInt(min, max)
+    local y = randomInt(min, max)
+    local sizeCat = pickRandom(kinds)
+    addRoid(jig, sizeCat, x, y)
+  end
+end
+
 local function destroyRoid(roid)
   roid:removeComp(roid.health) -- avoid repeat destruction events
 
-  -- Set the roid to remove itself
+  -- Set the roid to remove itself soon
   selfDestructEnt(roid, 0.2)
 
   -- Generate explosion
@@ -192,27 +192,12 @@ function TestFlightJig.init(parent, estore, res)
   Ship.dev_background_nebula_blue(jig, res)
   Ship.dev_background_starfield1(jig, res)
 
-  -- addRoid(jig, "large", -300, 200, { name = "r1" })
-  do
-    -- 4096 x 4
-    local min, max = -4000, 4000
-    -- local min, max = -300, 300
-    local kinds = { "small", "medium", "medium_large", "large", "huge" }
-    -- local kinds = { "medium", "medium_large" }
-    -- local kinds = { "medium_large" }
-    local numRoids = 100
-    for i = 1, numRoids do
-      local x = randomInt(min, max)
-      local y = randomInt(min, max)
-      local sizeCat = pickRandom(kinds)
-      addRoid(jig, sizeCat, x, y)
-    end
-  end
-
+  generateRoidField(jig, 100, -4000, 4000)
 
   local ship = Ship.ship(jig, res)
   ship:newComp("keystate", { handle = { "left", "right", "up", "down", "space" } })
 
+  -- Zoom the camera out a bit
   local cam = findOwningViewportCam(jig)
   if cam then
     cam.tr.sx = 1.7
@@ -225,44 +210,39 @@ local function generateBulletStrike(bullet, roid)
   local size = 0.5
   local factor = 2
   local expl = Explosion.explosion(roid:getParent(), { size = size, x = x, y = y, animSpeed = factor })
-  -- expl:newComp("sound", { sound = "medium_explosion_1" })
-  -- timeout the explosion
-  selfDestructEnt(expl, 1.0)
+  selfDestructEnt(expl, 1.0) -- timeout the explosion
 end
 
 -- Reduces hp by damage (if entity has a health component).
 -- Returns true if the hp has been reduced to 0 or below
-local function dealDamage(e, damage)
+local function damageEntity(e, damage)
   if e.health then
+    -- Reduce health
     e.health.hp = e.health.hp - damage
     if e.health.hp <= 0 then
+      -- signal health depleted
       return true
     end
   end
+  -- health not yet depleted:
   return false
 end
 
 local function bulletHitsRoid(bullet, roid)
   generateBulletStrike(bullet, roid)
-  if dealDamage(roid, 1) then
+  if damageEntity(roid, 1) then
     destroyRoid(roid)
   end
 end
 
-local function collideBulletsAndRoids(jig)
-  local bullets = {}
-  local roids = {}
-  do
-    jig:walkEntities(nil, function(e)
-      if e.tags and e.tags.roid then
-        table.insert(roids, e)
-      elseif e.tags and e.tags.ship_bullet then
-        table.insert(bullets, e)
-      end
-    end)
-  end
+local RoidQuery = Query.create({ tag = "roid" })
+local BulletQuery = Query.create({ tag = "ship_bullet" })
 
-  local roidsHit, bulletsRemoved = {}, {}
+local function collideBulletsAndRoids(jig)
+  local bullets = jig:getEstore():queryEntities(BulletQuery)
+  local roids = jig:getEstore():queryEntities(RoidQuery)
+
+  local bulletsRemoved = {}
   for i = 1, #bullets do
     local bullet = bullets[i]
     if not bulletsRemoved[bullet.eid] then
@@ -275,8 +255,6 @@ local function collideBulletsAndRoids(jig)
           bullet.tr.x + bullet.radius.x, bullet.tr.y + bullet.radius.y
         )
         if dist <= range then
-          roidsHit[roid.eid] = roid
-
           bulletHitsRoid(bullet, roid)
 
           bulletsRemoved[bullet.eid] = bullet
@@ -290,9 +268,14 @@ local function collideBulletsAndRoids(jig)
   end
 end
 
+
+
 function TestFlightJig.update(estore, input, res)
   local jig = estore:getEntityByName("test_flight")
 
+  local ship = estore:getEntityByName("ship")
+
+  -- Toggle from keyboard to gamepad controlls:
   local controlMode = State.get(jig, "control_mode") or "keyboard"
   if jig.keystate.pressed["return"] then
     controlMode = controlMode == "keyboard" and "joystick" or "keyboard"
@@ -300,15 +283,13 @@ function TestFlightJig.update(estore, input, res)
     print("test_flight: controlMode: ", controlMode)
   end
 
-  local ship = estore:getEntityByName("ship")
-
   if controlMode == "joystick" then
-    updateShipJoystickControls(ship, input)
+    updateShipController_gamepad(ship, input)
   else
-    updateShipKeyboardControls(ship)
+    updateShipController_keyboard(ship)
   end
 
-  controlShip2(ship, estore, input, res)
+  applyShipController(ship, estore, input, res)
 
   moveShip(ship)
 
@@ -317,10 +298,10 @@ function TestFlightJig.update(estore, input, res)
   moveRoids(estore, input, res)
 
   -- Animate ship flame
-  estore:seekEntity(matchShipFlame, function(flameE)
-    flameE.pic.sy = 0.75 + sin(flameE.timer.t * 4 * pi * 2) * 0.1
-    return true
-  end)
+  local shipFlame = estore:queryFirstEntity(ShipFlameQuery)
+  if shipFlame then
+    shipFlame.pic.sy = 0.75 + sin(shipFlame.timer.t * 4 * pi * 2) * 0.1
+  end
 
 
   -- -- remote detonator
