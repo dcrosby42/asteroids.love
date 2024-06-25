@@ -518,16 +518,10 @@ function Estore:getChildren(e)
 end
 
 function Estore:getCache(name)
-  local cache = self.caches[name]
-  if not cache then
-    cache = {}
-    self.caches[name] = cache
+  if not self.caches[name] then
+    self.caches[name] = {}
   end
-  return cache
-end
-
-function compDebugString(comp)
-  return Comp.debugString(comp)
+  return self.caches[name]
 end
 
 function Estore:clone(opts)

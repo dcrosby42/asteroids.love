@@ -99,10 +99,8 @@ deepclone = tcopydeep
 
 function tkeys(t)
   local keys = {}
-  local n = 0
   for k, _ in pairs(t) do
-    n = n + 1
-    keys[n] = k
+    keys[#keys + 1] = k
   end
   return keys
 end
@@ -440,6 +438,17 @@ function tfilter(t, fn)
     end
   end
   return values
+end
+
+-- return a list of items in a that are not in b
+function ldiff(a, b)
+  local res = {}
+  for i = 1, #a do
+    if not lcontains(b, a[i]) then
+      res[#res + 1] = a[i]
+    end
+  end
+  return res
 end
 
 function iterateFuncs(funcs)
