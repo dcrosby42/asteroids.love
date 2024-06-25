@@ -102,10 +102,20 @@ Comp.define('body', {
   'fixedrotation', false,
   'bullet', false,
   'sensor', false,
+  'categories', 1, -- collision categories (bitmask) https://love2d.org/wiki/Fixture:setFilterData
+  'mask', 65535,   -- collision mask (bitmask)
+  'group', 0,      -- collision group index
   'debugDraw', false,
   'debugDrawColor', { 0.8, 0.8, 1 },
 })
-Comp.define("force", { 'fx', 0, 'fy', 0, 'torque', 0, 'impx', 0, 'impy', 0, 'angimp', 0 })
+Comp.define("force", {
+  'fx', 0,
+  'fy', 0,
+  'torque', 0,
+  'impx', 0,
+  'impy', 0,
+  'angimp', 0,
+})
 Comp.define('joint',
   { 'kind', '',
     'toEntity', '',
