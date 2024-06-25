@@ -1,11 +1,11 @@
-Comps = require "castle.components"
-State = require "castle.state"
-Query = require "castle.ecs.query"
+local Comps = require "castle.components"
+local State = require "castle.state"
+local Query = require "castle.ecs.query"
 
 
 local READY = "ready"
 local COOLDOWN = "cooldown"
-local TRIGGERED = "triggered"
+-- local TRIGGERED = "triggered"
 
 local function _start(e, cooldown, timer)
   if not cooldown then return end

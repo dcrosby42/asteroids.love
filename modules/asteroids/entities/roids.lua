@@ -1,3 +1,4 @@
+local Coll = require "modules.asteroids.collision_categories"
 local Roids = {}
 
 Roids.PicIds = {
@@ -112,6 +113,9 @@ function Roids.roid(parent, opts)
   opts.y = opts.y or 0
   opts.radius = opts.radius or 65
   opts.hp = opts.hp or 6
+  opts.debugHit = not not opts.debugHit
+  opts.debugBody = not not opts.debugBody
+  opts.mass = opts.mass or (math.pi * opts.radius * opts.radius)
   local roid = parent:newEntity({
     { "name", { name = opts.name } },
     { "tag",  { name = "roid" } },
@@ -126,8 +130,19 @@ function Roids.roid(parent, opts)
       color = opts.color,
       debug = false,
     } },
-    { 'radius', { radius = opts.radius, debug = false } },
+    { 'radius', { radius = opts.radius, debug = opts.debugHit } }, -- hit circle radius
     { "health", { hp = opts.hp } },
+    -- phys:
+    { 'body', {
+      mass = opts.mass,
+      friction = 0.8,
+      restitution = 0.9,
+      debug = opts.debugBody,
+      categories = Coll.Roids,
+      mask = bit.bor(Coll.Roids, Coll.Lasers, Coll.Ships),
+    } },
+    { 'force',       {} },
+    { 'circleShape', { radius = opts.radius } },
   })
   if opts.name then
     roid:newComp("name", { name = opts.name })

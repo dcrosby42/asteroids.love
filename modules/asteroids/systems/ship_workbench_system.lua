@@ -1,6 +1,7 @@
 local Jigs = {}
 
 Jigs.test_flight = require "modules.asteroids.jigs.test_flight"
+Jigs.test_physics = require "modules.asteroids.jigs.test_physics"
 Jigs.flame_editor = require "modules.asteroids.jigs.flame_editor"
 Jigs.bullet_editor = require "modules.asteroids.jigs.bullet_editor"
 Jigs.roid_browser = require "modules.asteroids.jigs.roid_browser"
@@ -13,8 +14,10 @@ local JigSelectorMap = {
   ["3"] = "flame_editor",
   ["4"] = "roid_browser",
   ["5"] = "explosion_browser",
+  ["6"] = "test_physics",
 }
-local DefaultJigName = "test_flight"
+-- local DefaultJigName = "test_flight"
+local DefaultJigName = "test_physics"
 -- local DefaultJigName = "roid_browser"
 -- local DefaultJigName = "explosion_browser"
 -- local DefaultJigName = "bullet_editor"
@@ -40,6 +43,8 @@ local function transitionToJig(jigName, workbench, estore, res)
     jig.init(workbench, estore, res)
     -- Update the workbench's jig name
     workbench.states.jig.value = jigName
+  else
+    print("!! ship_workbench_system: no jig named: " .. jigName)
   end
 end
 

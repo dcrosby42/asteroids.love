@@ -1,7 +1,77 @@
 local W = require "modules.asteroids.entities.world"
 local Vec = require 'vector-light'
+local Coll = require "modules.asteroids.collision_categories"
 
 local Ship = {}
+
+local SHIP_RADIUS = 40
+
+function Ship.ship(parent, res)
+  local ship = parent:newEntity({
+    { "name",             { name = "ship" } },
+    { "tr",               {} },
+    { "vel",              {} },
+    -- Control
+    { "controller_state", { match_id = "joystick1" } },
+    { "keystate",         { handle = { "left", "right", "up", "down", "space" } } },
+    { "ship_controller",  {} },
+    -- Physics params
+    {
+      'body', {
+      mass = 5,
+      friction = 0.0,
+      restitution = 0.3,
+      categories = Coll.Ships,
+      mask = Coll.Roids,
+      -- debug = true,
+    } },
+    { 'force',       {} },
+    { 'circleShape', { radius = SHIP_RADIUS } },
+    -- State
+    { "cooldown",    { name = "lasers", t = 0.05, state = "ready" } },
+  })
+  ship:newEntity({
+    { "tag", { name = "gun_muzzle" } },
+    { "tag", { name = "gun_muzzle_left" } },
+    { "tr",  { x = -22, y = -9 } },
+  })
+  ship:newEntity({
+    { "tag", { name = "gun_muzzle" } },
+    { "tag", { name = "gun_muzzle_right" } },
+    { "tr",  { x = 22, y = -9 } },
+  })
+  ship:newEntity({
+    { "tag", { name = "ship_flame" } },
+    { "tr",  { y = 30 } },
+    { 'pic', {
+      name = "flame",
+      id = "ship_flame_06",
+      sx = 0.75,
+      sy = 0.75,
+      cx = 0.5,
+      cy = 0,
+      color = { 1, 1, 1, 0 },
+    } },
+    { "timer", {
+      name = "flame",
+      reset = 1,
+      countDown = false,
+      loop = true,
+    } },
+  })
+  ship:newEntity({
+    { "tag", { name = "ship_body" } },
+    { 'pic', {
+      id = "ship_example_05",
+      sx = 0.75,
+      sy = 0.75,
+      cx = 0.5,
+      cy = 0.5,
+      debug = false,
+    } },
+  })
+  return ship
+end
 
 function Ship.workbench(parent, res)
   local world, viewport = W.basicWorldAndViewport(parent, res)
@@ -113,58 +183,6 @@ function Ship.dev_background_starfield2(parent, res)
     end
   end
   return parent:newEntity(comps)
-end
-
-function Ship.ship(parent, res)
-  local ship = parent:newEntity({
-    { "tr",               {} },
-    { "name",             { name = "ship" } },
-    { "vel",              {} },
-    { "controller_state", { match_id = "joystick1" } },
-    { "ship_controller",  {} },
-    { "cooldown",         { name = "lasers", t = 0.05, state = "ready" } }
-  })
-  ship:newEntity({
-    { "tag", { name = "gun_muzzle" } },
-    { "tag", { name = "gun_muzzle_left" } },
-    { "tr",  { x = -22, y = -9 } },
-  })
-  ship:newEntity({
-    { "tag", { name = "gun_muzzle" } },
-    { "tag", { name = "gun_muzzle_right" } },
-    { "tr",  { x = 22, y = -9 } },
-  })
-  ship:newEntity({
-    { "tag", { name = "ship_flame" } },
-    { "tr",  { y = 30 } },
-    { 'pic', {
-      name = "flame",
-      id = "ship_flame_06",
-      sx = 0.75,
-      sy = 0.75,
-      cx = 0.5,
-      cy = 0,
-      color = { 1, 1, 1, 0 },
-    } },
-    { "timer", {
-      name = "flame",
-      reset = 1,
-      countDown = false,
-      loop = true,
-    } },
-  })
-  ship:newEntity({
-    { "tag", { name = "ship_body" } },
-    { 'pic', {
-      id = "ship_example_05",
-      sx = 0.75,
-      sy = 0.75,
-      cx = 0.5,
-      cy = 0.5,
-      debug = false,
-    } },
-  })
-  return ship
 end
 
 local function transformToLocAndDir(transf)

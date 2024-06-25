@@ -2,6 +2,8 @@ local Vec = require 'vector-light'
 local Ship = require "modules.asteroids.entities.ship"
 local Explosion = require "modules.asteroids.entities.explosion"
 local Roids = require "modules.asteroids.entities.roids"
+local Battle = require "modules.asteroids.battle_helpers"
+local Query = require "castle.ecs.query"
 
 local State = require "castle.state"
 local ViewportHelpers = require "castle.ecs.viewport_helpers"
@@ -163,23 +165,6 @@ local function generateRoidField(jig, numRoids, min, max)
   end
 end
 
-local function destroyRoid(roid)
-  roid:removeComp(roid.health) -- avoid repeat destruction events
-
-  -- Set the roid to remove itself soon
-  selfDestructEnt(roid, 0.2)
-
-  -- Generate explosion
-  local x, y = roid.tr.x, roid.tr.y
-  local size = 2.5
-  local factor = 0.8
-  local expl = Explosion.explosion(roid:getParent(),
-    { name = "roidsplode", size = size, x = x, y = y, animSpeed = factor })
-  expl:newComp("sound", { sound = "medium_explosion_1" })
-  -- timeout the explosion
-  selfDestructEnt(expl, 2.0)
-end
-
 
 function TestFlightJig.init(parent, estore, res)
   local jig = parent:newEntity({
@@ -205,36 +190,6 @@ function TestFlightJig.init(parent, estore, res)
   end
 end
 
-local function generateBulletStrike(bullet, roid)
-  local x, y = bullet.tr.x, bullet.tr.y
-  local size = 0.5
-  local factor = 2
-  local expl = Explosion.explosion(roid:getParent(), { size = size, x = x, y = y, animSpeed = factor })
-  selfDestructEnt(expl, 1.0) -- timeout the explosion
-end
-
--- Reduces hp by damage (if entity has a health component).
--- Returns true if the hp has been reduced to 0 or below
-local function damageEntity(e, damage)
-  if e.health then
-    -- Reduce health
-    e.health.hp = e.health.hp - damage
-    if e.health.hp <= 0 then
-      -- signal health depleted
-      return true
-    end
-  end
-  -- health not yet depleted:
-  return false
-end
-
-local function bulletHitsRoid(bullet, roid)
-  generateBulletStrike(bullet, roid)
-  if damageEntity(roid, 1) then
-    destroyRoid(roid)
-  end
-end
-
 local RoidQuery = Query.create({ tag = "roid" })
 local BulletQuery = Query.create({ tag = "ship_bullet" })
 
@@ -255,7 +210,7 @@ local function collideBulletsAndRoids(jig)
           bullet.tr.x + bullet.radius.x, bullet.tr.y + bullet.radius.y
         )
         if dist <= range then
-          bulletHitsRoid(bullet, roid)
+          Battle.bulletHitsRoid(bullet, roid)
 
           bulletsRemoved[bullet.eid] = bullet
         end
