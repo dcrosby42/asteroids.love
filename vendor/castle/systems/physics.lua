@@ -2,58 +2,84 @@ local Comps = require "castle.components"
 local GC = require "garbagecollect"
 local Debug = (require("mydebug")).sub("Physics", false, false)
 local inspect = require('inspect')
+local Query = require "castle.ecs.query"
 
 -- local logDebug = print
 local logDebug = function()
 end
 local logError = print
 
--- (pre-declare some helpers, see below)
-local generateCollisionEvents, newBody, newJoint, beginContact, endContact
+local BodyQuery = Query.create("body")
+local JointQuery = Query.create("joint")
 
-local P = love.physics
+local CacheHelper = {
+  get = function(estore, cacheName, keyOrComp, fillFunc)
+    local cache = estore:getCache(cacheName)
+    if not cache then
+      error("CacheHelper.get: estore has no cache named " .. tostring(cacheName))
+    end
+    local key = keyOrComp
+    if type(key) == "table" then
+      key = keyOrComp.cid
+    end
+    if key == nil then
+      error(
+        "CacheHelper.get('" ..
+        cacheName .. "'): key must either be a string/int key OR a Component, ie, a table with 'cid' usable as a key")
+    end
+    local obj = cache[key]
+    if not obj and fillFunc then
+      obj = fillFunc()
+      if not obj then
+        error("CacheHelper.get('" .. tostring(cacheName) .. "', '" .. tostring(key) .. "'): fillFunc must return non-nil")
+      end
+      cache[key] = obj
+    end
+    return obj
+  end
+}
+
+
+
+-- (pre-declare some helpers, see below)
+local generateCollisionEvents, newBody, newJoint, beginContact_handler, endContact_handler
+
+local physics = love.physics
 
 local _CollisionBuffer
 -- Creates and maintains a physics simulation for entities that have body components.
 local physicsSystem = defineQuerySystem(
   "physicsWorld",
   function(physEnt, estore, input, res)
-    local oc = estore:getCache("physics")
-    local worlds = estore:getCache("physicsWorlds")
-
-    local comp = physEnt.physicsWorld
-    local world = worlds[comp.cid]
-    if not world then
+    local physWorld = CacheHelper.get(estore, "physicsWorld", physEnt.physicsWorld, function()
+      local worldComp = physEnt.physicsWorld
       Debug.println("Creating new physics world")
-      world = P.newWorld(comp.gx, comp.gy, comp.allowSleep)
-      world:setCallbacks(beginContact, endContact, nil, nil)
-      worlds[comp.cid] = world
-    end
+      local w = physics.newWorld(worldComp.gx, worldComp.gy, worldComp.allowSleep)
+      w:setCallbacks(beginContact_handler, endContact_handler, nil, nil)
+      return w
+    end)
 
     --
     -- SYNC: Components->to->Physics Objects
     --
     -- Sync body comps to phys bodies:
     local sawIds = {}
-    estore:walkEntities(hasComps("body"), function(e)
+    for _, e in ipairs(BodyQuery(estore)) do
       local id = e.body.cid
       table.insert(sawIds, id)
+
       -- See if there's a cached phys obj for this component
-      local obj = oc[id]
-      if obj == nil then
-        -- newly-added physics component -> create new obj in cache
-        -- obj = res.physics.newObject(world, e)
-        obj = newBody(world, e)
-        if not obj and res.physics and res.physics.newObject then
-          obj = res.physics.newObject(world, e)
-        end
+      local obj = CacheHelper.get(estore, "physics", e.body, function()
+        -- First time seeing this 'body' component: create new physics obj
+        local obj = newBody(physWorld, e)
         if obj == nil then
           error("Can't build new physics object for " .. inspect(e.body))
         end
-        oc[id] = obj
         Debug.println("New physics body for cid=" .. e.body.cid .. " kind=" ..
           e.body.kind)
-      end
+        return obj
+      end)
+
       -- Apply values from Entity to the physics object
       local body = obj.body
       body:setPosition(e.tr.x, e.tr.y)
@@ -75,36 +101,30 @@ local physicsSystem = defineQuerySystem(
         f.impy = 0
         f.angimp = 0
       end
-      -- local fixtures = b:getFixtureList()
-      -- for i=1,#fixtures do
-      --   fixtures[i]:setFriction(e.body.friction)
-      -- end
-    end)
+    end
+
+    -- (this cache is used throughout the rest of this monolithic func)
+    local physObjCache = estore:getCache("physics")
+
     -- Sync joint comps to phys bodies:
-    estore:walkEntities(hasComps("joint"), function(e)
+    for _, e in ipairs(JointQuery(estore)) do
       local id = e.joint.cid
       table.insert(sawIds, id)
       -- See if there's a cached phys obj for this component
-      local j = oc[id]
-      if j == nil then
+      local joint = CacheHelper.get(estore, "physics", id, function()
         -- newly-added Joint component -> create new phys joint in cache
-        j = newJoint(world, e.joint, e, estore, oc)
-        oc[id] = j
-        Debug.println("New physics joint for cid=" .. id .. " kind=" ..
-          e.joint.kind)
-      end
+        Debug.println("New physics joint for cid=" .. id .. " kind=" .. e.joint.kind)
+        return newJoint(physWorld, e.joint, e, estore, physObjCache)
+      end)
       -- Apply values from Joint comp to the physics Joint object
       -- TODO ... when we have more interesting Joints
-    end)
+    end
 
     -- Remove cached objects (bodies and joints) whose ids weren't seen in the last pass through the physics components
-    local remIds = {}
-    for id, obj in pairs(oc) do
-      if not lcontains(sawIds, id) then table.insert(remIds, id) end
-    end
+    local remIds = ldiff(tkeys(physObjCache), sawIds)
     for _, id in ipairs(remIds) do
       Debug.println("Removing phys obj cid=" .. id)
-      local obj = oc[id]
+      local obj = physObjCache[id]
       if obj then
         if obj.body then
           obj.body:destroy()
@@ -114,7 +134,7 @@ local physicsSystem = defineQuerySystem(
           obj.joint:destroy()
           GC.request()
         end
-        oc[id] = nil
+        physObjCache[id] = nil
       end
     end
 
@@ -123,7 +143,7 @@ local physicsSystem = defineQuerySystem(
     --
     -- Iterate the physics world
     --
-    world:update(input.dt)
+    physWorld:update(input.dt)
 
     --
     -- Process Collisions
@@ -136,7 +156,7 @@ local physicsSystem = defineQuerySystem(
     --
     estore:walkEntities(hasComps("body"), function(e)
       local id = e.body.cid
-      local obj = oc[id]
+      local obj = physObjCache[id]
       if obj then
         -- Copy values from physics object to entity's pos and vel components
         local b = obj.body
@@ -176,7 +196,7 @@ local function tryGetUserData(obj)
   return nil
 end
 
-function beginContact(a, b, contact)
+function beginContact_handler(a, b, contact)
   local a_cid = tryGetUserData(a)
   local b_cid = tryGetUserData(b)
   if not a_cid or not b_cid then return end -- sometimes we get stale fixtures, abort
@@ -214,7 +234,7 @@ function beginContact(a, b, contact)
   GC.request()
 end
 
-function endContact(a, b, contact)
+function endContact_handler(a, b, contact)
   local a_cid = tryGetUserData(a)
   local b_cid = tryGetUserData(b)
   if not a_cid or not b_cid then return end -- sometimes we get stale fixtures, abort
@@ -349,7 +369,7 @@ function newJoint(pw, jointComp, e, estore, objCache)
     local vx = toCenterX - fromCenterX
     local vy = toCenterY - fromCenterY
 
-    joint = P.newPrismaticJoint(from.body, to.body, fromCenterX, fromCenterY,
+    joint = physics.newPrismaticJoint(from.body, to.body, fromCenterX, fromCenterY,
       toCenterX, toCenterY, vx, vy, fromComp.docollide)
     if jointComp.upperlimit ~= "" and jointComp.lowerlimit ~= "" then
       joint:setLimits(jointComp.lowerlimit, jointComp.upperlimit)
@@ -370,7 +390,7 @@ function newJoint(pw, jointComp, e, estore, objCache)
     local vx = toCenterX - fromCenterX
     local vy = toCenterY - fromCenterY
 
-    joint = P.newWheelJoint(from.body, to.body, fromCenterX, fromCenterY,
+    joint = physics.newWheelJoint(from.body, to.body, fromCenterX, fromCenterY,
       toCenterX, toCenterY, vx, vy, jointComp.docollide)
     if jointComp.motorspeed ~= "" and jointComp.maxmotorforce ~= "" then
       joint:setMotorEnabled(true)
@@ -380,7 +400,7 @@ function newJoint(pw, jointComp, e, estore, objCache)
   elseif jointComp.kind == "weld" then
     local x = from.body:getX()
     local y = from.body:getY()
-    joint = P.newWeldJoint(from.body, to.body, x, y, false)
+    joint = physics.newWeldJoint(from.body, to.body, x, y, false)
   else
     error("Cannot make a physics joint for: " .. inspect(jointComp))
   end
@@ -396,7 +416,7 @@ function newBody(pw, e)
   end
   local dyn = "dynamic"
   if not e.body.dynamic then dyn = "static" end
-  local b = P.newBody(pw, e.tr.x, e.tr.y, dyn)
+  local b = physics.newBody(pw, e.tr.x, e.tr.y, dyn)
   b:setBullet(e.body.bullet)
   b:setFixedRotation(e.body.fixedrotation)
 
@@ -404,29 +424,30 @@ function newBody(pw, e)
   local fixtures = {}
 
   local function addShape(s)
-    local f = P.newFixture(b, s)
+    local f = physics.newFixture(b, s)
     f:setUserData(e.body.cid)
-    f:setFriction(e.body.friction)       -- TODO someday allow this to be set per-shape instead of whole body instead of whole body.  If needed
-    f:setRestitution(e.body.restitution) -- TODO someday allow this to be set per-shape instead of whole body instead of whole body.  If needed
+    f:setFriction(e.body.friction)                                -- TODO someday allow this to be set per-shape instead of whole body instead of whole body.  If needed
+    f:setRestitution(e.body.restitution)                          -- TODO someday allow this to be set per-shape instead of whole body instead of whole body.  If needed
     f:setSensor(e.body.sensor)
+    f:setFilterData(e.body.categories, e.body.mask, e.body.group) -- https://love2d.org/wiki/Fixture:setFilterData
     table.insert(shapes, s)
     table.insert(fixtures, f)
   end
 
   for _, r in pairs(e.rectangleShapes or {}) do
-    local s = P.newRectangleShape(r.x, r.y, r.w, r.h, r.angle)
+    local s = physics.newRectangleShape(r.x, r.y, r.w, r.h, r.angle)
     addShape(s)
   end
   for _, poly in pairs(e.polygonShapes or {}) do
-    local s = P.newPolygonShape(poly.vertices)
+    local s = physics.newPolygonShape(poly.vertices)
     addShape(s)
   end
   for _, c in pairs(e.circleShapes or {}) do
-    local s = P.newCircleShape(c.x, c.y, c.radius)
+    local s = physics.newCircleShape(c.x, c.y, c.radius)
     addShape(s)
   end
   for _, ch in pairs(e.chainShapes or {}) do
-    local s = P.newChainShape(ch.loop, ch.vertices)
+    local s = physics.newChainShape(ch.loop, ch.vertices)
     addShape(s)
   end
 
