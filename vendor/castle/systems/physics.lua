@@ -208,8 +208,12 @@ function beginContact_handler(a, b, contact)
   -- velocities
   local a_dx, a_dy, b_dx, b_dy
   if a_x and a_y then
-    local a_dx, a_dy = a:getBody():getLinearVelocityFromWorldPoint(a_x, a_y)
-    local b_dx, b_dy = b:getBody():getLinearVelocityFromWorldPoint(a_x, a_y) -- FIXME? should this be b_x b_y?
+    a_dx, a_dy = a:getBody():getLinearVelocityFromWorldPoint(a_x, a_y)
+    if not (b_x and b_y) then
+      b_x = a_x
+      b_y = a_y
+    end
+    b_dx, b_dy = b:getBody():getLinearVelocityFromWorldPoint(b_x, b_y)
   end
 
   table.insert(_CollisionBuffer, {
@@ -256,7 +260,7 @@ local function removeContactComps(from, matching)
   for i = 1, #rem do from:removeComp(rem[i]) end
 end
 
--- For each collision notes in physWorld._secret_collision_buffer,
+-- For each collision notes in physWorld._CollisionBuffer,
 -- Create a "collision event" object and append to the given events list.
 function generateCollisionEvents(collbuf, estore, events)
   if #collbuf > 0 then
@@ -310,8 +314,8 @@ function generateCollisionEvents(collbuf, estore, events)
             ny = ny,
             x = a_x,
             y = a_y,
-            dx = a_dx,
-            dy = a_dy,
+            dx = b_dx,
+            dy = b_dy,
           })
         else
           -- Emit a "begin collision" event

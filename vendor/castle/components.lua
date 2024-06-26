@@ -134,7 +134,17 @@ Comp.define("polygonLineStyle",
   { 'draw', true, 'color', { 1, 1, 1 }, 'linewidth', 1, 'linestyle', 'smooth', 'closepolygon', true })
 
 Comp.define("contact",
-  { 'otherEid', '', 'nx', 0, 'ny', 0, 'myCid', '', 'otherCid', '', 'x', 0, 'y', 0, 'dx', 0, 'dy', 0 })
+  {
+    'otherEid', '',
+    'nx', 0,
+    'ny', 0,
+    'myCid', '',
+    'otherCid', '',
+    'x', 0,
+    'y', 0,
+    'dx', 0,
+    'dy', 0,
+  })
 
 --
 -- INPUT / UI
