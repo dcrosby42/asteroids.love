@@ -47,7 +47,7 @@ function M.destroyRoid(roid)
     { name = "roidsplode", size = size, x = x, y = y, animSpeed = factor })
   expl:newComp("sound", { sound = "medium_explosion_1" })
   -- timeout the explosion
-  selfDestructEnt(expl, 2.0)
+  selfDestructEnt(expl, 3.0)
 end
 
 return M

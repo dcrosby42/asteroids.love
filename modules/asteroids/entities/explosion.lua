@@ -8,23 +8,32 @@ function Explosion.explosion(parent, opts)
   opts.size = opts.size or 1
   opts.animSpeed = opts.animSpeed or 1
   opts.r = randomFloat(0, 2 * math.pi)
-  local picId
-  if opts.picId then
-    picId = opts.picId
+  local animId
+  if opts.animId then
+    -- custom pic reference
+    animId = opts.animId
   elseif opts.num then
-    picId = "debris_explosion_" .. tostring(opts.num)
+    -- indexed explosion
+    animId = "debris_explosion_" .. tostring(opts.num)
   else
-    picId = "debris_explosion_" .. tostring(randomInt(1, Explosion.DebrisExplosionCount))
+    -- random explosion
+    animId = "debris_explosion_" .. tostring(randomInt(1, Explosion.DebrisExplosionCount))
   end
   local expl = parent:newEntity({
-    { "tag",   { name = "explosion" } },
-    { "tr",    { x = opts.x, y = opts.y, r = opts.r } },
-    { "anim",  { id = picId, sx = opts.size, sy = opts.size, cx = 0.5, cy = 0.5, timer = "splode" } },
+    { "tag", { name = "explosion" } },
+    { "tr",  { x = opts.x, y = opts.y, r = opts.r } },
+    { "anim", {
+      name = "splode",
+      id = animId,
+      sx = opts.size,
+      sy = opts.size,
+      cx = 0.5,
+      cy = 0.5,
+      onComplete = "selfDestruct",
+    } },
     { "timer", { name = "splode", countDown = false, factor = opts.animSpeed } },
   })
-  if opts.name then
-    expl:newComp("name", { name = opts.name })
-  end
+  nameEnt(expl, opts.name)
   return expl
 end
 

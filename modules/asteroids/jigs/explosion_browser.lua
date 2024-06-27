@@ -11,17 +11,17 @@ local inspect = require('inspect')
 local function mkSplode(parent, n, x, y)
   local factor = 0.7
   local s = 3
-  local picId = "debris_explosion_" .. tostring(n)
+  local animId = "debris_explosion_" .. tostring(n)
   local explosion = Explosion.explosion(parent, {
-    picId = picId,
+    animId = animId,
     x = x,
     y = y,
     size = s,
     animSpeed = factor,
   })
-  explosion:newComp("name", { name = picId })
+  explosion:newComp("name", { name = animId })
   explosion:newComp("label", {
-    text = picId,
+    text = animId,
     color = { 1, 1, 1 },
     align = "middle",
     cx = 0.5,

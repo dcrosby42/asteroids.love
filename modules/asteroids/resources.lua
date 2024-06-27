@@ -11,6 +11,7 @@ return {
         data = {
           "castle.systems.timer",
           "castle.systems.selfdestruct",
+          "castle.systems.anim",
           "castle.systems.physics",
           "castle.systems.sound",
           "castle.systems.touch",
