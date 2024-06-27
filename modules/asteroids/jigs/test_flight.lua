@@ -1,142 +1,30 @@
 local Vec = require 'vector-light'
 local Ship = require "modules.asteroids.entities.ship"
-local Explosion = require "modules.asteroids.entities.explosion"
+local Menu = require "modules.asteroids.jigs.menu"
+local State = require "castle.state"
+local TweenHelpers = require "castle.tween.tween_helpers"
+local Cooldown = require "modules.asteroids.systems.cooldown"
 local Roids = require "modules.asteroids.entities.roids"
+local Coll = require "modules.asteroids.collision_categories"
+local inspect = require "inspect"
 local Battle = require "modules.asteroids.battle_helpers"
 local Query = require "castle.ecs.query"
 
-local State = require "castle.state"
 local ViewportHelpers = require "castle.ecs.viewport_helpers"
 local findOwningViewportCam = ViewportHelpers.findOwningViewportCamera
 
-local Cooldown = require "modules.asteroids.systems.cooldown"
+local USCon = require "modules.asteroids.jigs.update_ship_controller"
 
-local inspect = require "inspect"
 
-local min = math.min
-local sin = math.sin
 local pi = math.pi
+local sin = math.sin
 
-local TestFlightJig = {}
-
-
-
--- Use keystate to set ship_controller values
-local function updateShipController_keyboard(ship)
-  local con = ship.ship_controller
-
-  local turn = 0
-  if ship.keystate.held.left then
-    turn = turn - 1
-  end
-  if ship.keystate.held.right then
-    turn = turn + 1
-  end
-  con.turn = turn
-
-  local accel = 0
-  if ship.keystate.held.up then
-    accel = accel + 1
-  end
-  con.accel = accel
-
-  if ship.keystate.held.space then
-    con.fire_gun = 1
-  else
-    con.fire_gun = 0
-  end
-end
+local BulletQuery = Query.create({ tag = "ship_bullet" })
 
 
--- Use controller_state (joystick) to update ship_controller values
-local function updateShipController_gamepad(ship, input)
-  local conState = ship.controller_state
-  local shipCon = ship.ship_controller
-
-  shipCon.turn = conState.value.leftx or 0
-  shipCon.accel = -(conState.value.lefty or 0)
-  if conState.held.face1 then
-    shipCon.fire_gun = 1
-  else
-    shipCon.fire_gun = 0
-  end
-end
-
-local ShipFlameQuery = Query.create({ tag = "ship_flame" })
-
--- Apply ship_controller inputs to the ship
-local function applyShipController(ship, estore, input, res)
-  local spinSpeed = pi * 1.5
-
-  local con = ship.ship_controller
-
-  -- Control direction and thrust
-  if con.turn ~= 0 then
-    ship.tr.r = ship.tr.r + (con.turn * spinSpeed * input.dt)
-  end
-  if con.accel > 0 then
-    -- accelerate under thrust
-    local speed = 6
-    local dx, dy = Vec.mul(con.accel * speed * input.dt, Vec.rotate(ship.tr.r, 0, -1))
-    ship.vel.dx = ship.vel.dx + dx
-    ship.vel.dy = ship.vel.dy + dy
-  else
-    -- auto-brake
-    if Vec.len(ship.vel.dx, ship.vel.dy) > 0 then
-      local speed = 6
-      local dx, dy = Vec.mul(speed * input.dt, Vec.normalize(Vec.mul(-1, ship.vel.dx, ship.vel.dy)))
-      ship.vel.dx = min(ship.vel.dx + dx)
-      ship.vel.dy = min(ship.vel.dy + dy)
-    end
-  end
-
-  -- Fire control
-  if con.fire_gun > 0 then
-    if Cooldown.isReady(ship, "lasers") then
-      -- FIRE
-      -- left gun
-      Ship.fireBullet(ship, "left", "ship_bullets_04", -1500)
-      -- right gun
-      local bullet = Ship.fireBullet(ship, "right", "ship_bullets_04", -1500)
-      -- (pin the sound to the right bullet... prolly should be its own, but for now let's just mooch off the laser's natural lifespan)
-      bullet:newComp("sound", { sound = "laser_small" })
-
-      Cooldown.trigger(ship, "lasers")
-    end
-  end
-
-  -- Show ship flame only when thrust active
-  local shipFlame = estore:queryFirstEntity(ShipFlameQuery)
-  if shipFlame then
-    if con.accel > 0 then
-      shipFlame.pic.color[4] = 1
-    else
-      shipFlame.pic.color[4] = 0
-    end
-    return true
-  end
-end
-
--- (testing: motion should be a different system) Apply velocity to get motion
-local function moveShip(ship)
-  ship.tr.x = ship.tr.x + ship.vel.dx
-  ship.tr.y = ship.tr.y + ship.vel.dy
-end
-
-local function moveShipBullets(estore, input, res)
-  for _, e in ipairs(estore:indexLookup("byTag", "ship_bullet")) do
-    e.tr.x = e.tr.x + (e.vel.dx * input.dt)
-    e.tr.y = e.tr.y + (e.vel.dy * input.dt)
-  end
-end
-
-local function moveRoids(estore, input, res)
-  for _, e in ipairs(estore:indexLookup("byTag", "roid")) do
-    e.tr.x = e.tr.x + (e.vel.dx * input.dt)
-    e.tr.y = e.tr.y + (e.vel.dy * input.dt)
-    e.tr.r = e.tr.r + (e.vel.angularvelocity * input.dt)
-  end
-end
+local Jig = {
+  name = "test_flight"
+}
 
 local function addRoid(parent, sizeCat, x, y, opts)
   opts = opts or {}
@@ -144,6 +32,7 @@ local function addRoid(parent, sizeCat, x, y, opts)
     sizeCat = sizeCat,
     x = x,
     y = y,
+    -- debugBody = true,
   })
   nameEnt(roid, opts.name)
   -- roid.radius.debug = true
@@ -166,12 +55,17 @@ local function generateRoidField(jig, numRoids, min, max)
 end
 
 
-function TestFlightJig.init(parent, estore, res)
+function Jig.init(parent, estore, res)
   local jig = parent:newEntity({
-    { "name",     { name = "test_flight" } },
+    { "name",     { name = Jig.name } },
     { "tag",      { name = "jig" } },
     { "keystate", { handle = { "return" } } },
     { "state",    { name = "control_mode", value = "keyboard" } },
+  })
+
+  jig:newEntity({
+    { 'name',         { name = "physics_world" } },
+    { 'physicsWorld', { allowSleep = false } },
   })
 
   Ship.dev_background_nebula_blue(jig, res)
@@ -180,7 +74,25 @@ function TestFlightJig.init(parent, estore, res)
   generateRoidField(jig, 100, -4000, 4000)
 
   local ship = Ship.ship(jig, res)
-  ship:newComp("keystate", { handle = { "left", "right", "up", "down", "space" } })
+  do
+    local infos = {
+      { "keystate",    { handle = { "left", "right", "up", "down", "space" } } },
+      { 'body', {
+        mass = 5,
+        friction = 0.0,
+        restitution = 0.3,
+        -- debug = DEBUG_SHIP_BODY,
+        categories = Coll.Ships,
+        mask = Coll.Roids,
+      } },
+      { 'force',       {} },
+      { 'circleShape', { radius = SHIP_RADIUS } },
+    }
+    for _, nameAndProps in ipairs(infos) do
+      ship:newComp(nameAndProps[1], nameAndProps[2])
+    end
+    -- ship.vel.dx = 30
+  end
 
   -- Zoom the camera out a bit
   local cam = findOwningViewportCam(jig)
@@ -188,46 +100,124 @@ function TestFlightJig.init(parent, estore, res)
     cam.tr.sx = 1.7
     cam.tr.sy = 1.7
   end
+
+  return jig
 end
 
-local RoidQuery = Query.create({ tag = "roid" })
-local BulletQuery = Query.create({ tag = "ship_bullet" })
+function Jig.finalize(jigE, estore)
+end
 
-local function collideBulletsAndRoids(jig)
-  local bullets = jig:getEstore():queryEntities(BulletQuery)
-  local roids = jig:getEstore():queryEntities(RoidQuery)
+local ShipFlameQuery = Query.create({ tag = "ship_flame" })
 
-  local bulletsRemoved = {}
-  for i = 1, #bullets do
-    local bullet = bullets[i]
-    if not bulletsRemoved[bullet.eid] then
-      for j = 1, #roids do
-        local roid = roids[j]
-        assert(bullet.radius)
-        local range = bullet.radius.radius + roid.radius.radius
-        local dist = Vec.dist(
-          roid.tr.x + roid.radius.x, roid.tr.y + roid.radius.y,
-          bullet.tr.x + bullet.radius.x, bullet.tr.y + bullet.radius.y
-        )
-        if dist <= range then
-          Battle.bulletHitsRoid(bullet, roid)
+-- Apply ship_controller inputs to the ship
+local function applyShipController(ship, estore, dt)
+  -- local spinSpeed = pi * 1.5
 
-          bulletsRemoved[bullet.eid] = bullet
+  local con = ship.ship_controller
+
+  -- Control direction and thrust
+  -- if con.turn ~= 0 then
+  --   local spinSpeed = pi * 1.5 * 100
+  --   local maxspin = 8
+  --   ship.force.angimp = con.turn * spinSpeed
+  --   if ship.vel.angularvelocity > maxspin then
+  --     ship.vel.angularvelocity = maxspin
+  --   elseif ship.vel.angularvelocity < -maxspin then
+  --     ship.vel.angularvelocity = -maxspin
+  --   end
+  -- end
+  if con.turn ~= 0 then
+    local spinSpeed = pi * 1.5
+    ship.tr.r = ship.tr.r + (con.turn * spinSpeed * dt)
+  end
+
+  if con.accel > 0 then
+    -- accelerate under thrust
+    -- local speed = 6
+    local speed = 450 * 5
+    local dx, dy = Vec.mul(con.accel * speed * dt, Vec.rotate(ship.tr.r, 0, -1))
+    ship.force.impx = dx
+    ship.force.impy = dy
+  else
+    -- auto-brake
+    if Vec.len(ship.vel.dx, ship.vel.dy) > 0 then
+      local speed = 150
+      local dx, dy = Vec.mul(speed * dt, Vec.normalize(Vec.mul(-1, ship.vel.dx, ship.vel.dy)))
+      ship.vel.dx = ship.vel.dx + dx
+      ship.vel.dy = ship.vel.dy + dy
+    end
+  end
+
+  -- Fire control
+  if con.fire_gun > 0 then
+    if Cooldown.isReady(ship, "lasers") then
+      -- FIRE
+      local leftBullet = Ship.fireBullet(ship, "left", "ship_bullets_04", -1500)
+      local rightBullet = Ship.fireBullet(ship, "right", "ship_bullets_04", -1500)
+      for _, bullet in ipairs({ leftBullet, rightBullet }) do
+        local defs = {
+          { 'body', {
+            mass = 0.5,
+            friction = 0.5,
+            restitution = 0.9,
+            categories = Coll.Lasers,
+            mask = Coll.Roids,
+            -- debug = true,
+          } },
+          { 'force',       {} },
+          { 'circleShape', { radius = 7 } },
+        }
+        for _, cdef in ipairs(defs) do
+          bullet:newComp(cdef[1], cdef[2])
+        end
+      end
+
+      -- (pin the sound to the right bullet... prolly should be its own, but for now let's just mooch off the laser's natural lifespan)
+      rightBullet:newComp("sound", { sound = "laser_small" })
+
+      Cooldown.trigger(ship, "lasers")
+    end
+  end
+
+  -- Show ship flame only when thrust active
+  local shipFlame = estore:queryFirstEntity(ShipFlameQuery)
+  if shipFlame then
+    if con.accel > 0 then
+      shipFlame.pic.color[4] = 1
+    else
+      shipFlame.pic.color[4] = 0
+    end
+    return true
+  end
+end
+
+local function collideBulletsAndRoids(estore)
+  for _, bullet in ipairs(BulletQuery(estore)) do
+    if bullet.contacts then
+      for _, contact in pairs(bullet.contacts) do
+        local hitE = estore:getEntity(contact.otherEid)
+        if Roids.isRoid(hitE) then
+          Battle.bulletHitsRoid(bullet, contact, hitE)
+          break
         end
       end
     end
   end
+end
 
-  for _, bullet in pairs(bulletsRemoved) do
-    bullet:destroy()
+local function collideShipAndRoids(ship, estore)
+  for _, contact in pairs(ship.contacts or {}) do
+    local hitE = estore:getEntity(contact.otherEid)
+    if Roids.isRoid(hitE) then
+      Battle.shipHitsRoid(ship, contact, hitE)
+      break -- deleteme?
+    end
   end
 end
 
 
-
-function TestFlightJig.update(estore, input, res)
-  local jig = estore:getEntityByName("test_flight")
-
+function Jig.update(estore, input, res)
+  local jig = estore:getEntityByName(Jig.name)
   local ship = estore:getEntityByName("ship")
 
   -- Toggle from keyboard to gamepad controlls:
@@ -238,19 +228,15 @@ function TestFlightJig.update(estore, input, res)
     print("test_flight: controlMode: ", controlMode)
   end
 
+  -- Apply controller or keybd state to the ship controller comp:
   if controlMode == "joystick" then
-    updateShipController_gamepad(ship, input)
+    USCon.updateShipController_gamepad(ship.ship_controller, ship.controller_state)
   else
-    updateShipController_keyboard(ship)
+    USCon.updateShipController_keyboard(ship.ship_controller, ship.keystate)
   end
 
-  applyShipController(ship, estore, input, res)
 
-  moveShip(ship)
-
-  moveShipBullets(estore, input, res)
-
-  moveRoids(estore, input, res)
+  applyShipController(ship, estore, input.dt)
 
   -- Animate ship flame
   local shipFlame = estore:queryFirstEntity(ShipFlameQuery)
@@ -258,18 +244,9 @@ function TestFlightJig.update(estore, input, res)
     shipFlame.pic.sy = 0.75 + sin(shipFlame.timer.t * 4 * pi * 2) * 0.1
   end
 
+  collideBulletsAndRoids(estore)
 
-  -- -- remote detonator
-  -- if jig.keystate.pressed.b then
-  --   local roid = estore:getEntityByName("r1")
-  --   if roid then
-  --     destroyRoid(roid)
-  --   end
-  --   print("bang")
-  -- end
-
-  collideBulletsAndRoids(jig)
-
+  collideShipAndRoids(ship, estore)
 
   -- Camera follow
   local camera = estore:getEntityByName("cam1")
@@ -279,4 +256,4 @@ function TestFlightJig.update(estore, input, res)
   end
 end
 
-return TestFlightJig
+return Jig
