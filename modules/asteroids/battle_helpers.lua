@@ -17,16 +17,16 @@ function M.damageEntity(e, damage)
   return false
 end
 
-function M.generateBulletStrike(bullet, roid)
-  local x, y = bullet.tr.x, bullet.tr.y
+function M.generateBulletStrike(bullet, contact, roid)
+  local x, y = contact.x, contact.y
   local size = 0.5
   local factor = 2
   local expl = Explosion.explosion(roid:getParent(), { size = size, x = x, y = y, animSpeed = factor })
   selfDestructEnt(expl, 1.0) -- timeout the explosion
 end
 
-function M.bulletHitsRoid(bullet, roid)
-  M.generateBulletStrike(bullet, roid)
+function M.bulletHitsRoid(bullet, contact, roid)
+  M.generateBulletStrike(bullet, contact, roid)
   if M.damageEntity(roid, 1) then
     M.destroyRoid(roid)
   end
@@ -48,6 +48,22 @@ function M.destroyRoid(roid)
   expl:newComp("sound", { sound = "medium_explosion_1" })
   -- timeout the explosion
   selfDestructEnt(expl, 3.0)
+end
+
+function M.generateShipStrike(ship, contact, roid)
+  local x, y = contact.x, contact.y
+  local size = 0.5
+  local factor = 2
+  local expl = Explosion.explosion(roid:getParent(), { size = size, x = x, y = y, animSpeed = factor })
+  selfDestructEnt(expl, 1.0) -- timeout the explosion
+end
+
+function M.shipHitsRoid(ship, contact, roid)
+  M.generateShipStrike(ship, contact, roid)
+  -- if M.damageEntity(roid, 1) then
+  --   M.destroyRoid(roid)
+  -- end
+  -- bullet:destroy()
 end
 
 return M

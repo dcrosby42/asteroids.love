@@ -150,6 +150,10 @@ function Roids.roid(parent, opts)
   return roid
 end
 
+function Roids.isRoid(e)
+  return e and e.tags and e.tags.roid
+end
+
 function Roids.random(parent, opts)
   opts = shallowclone(opts)
   local cat = SpriteConfigs[opts.sizeCat]

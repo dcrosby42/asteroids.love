@@ -196,11 +196,21 @@ local function collideBulletsAndRoids(estore)
     if bullet.contacts then
       for _, contact in pairs(bullet.contacts) do
         local hitE = estore:getEntity(contact.otherEid)
-        if hitE.tags and hitE.tags.roid then
-          Battle.bulletHitsRoid(bullet, hitE)
+        if Roids.isRoid(hitE) then
+          Battle.bulletHitsRoid(bullet, contact, hitE)
           break
         end
       end
+    end
+  end
+end
+
+local function collideShipAndRoids(ship, estore)
+  for _, contact in pairs(ship.contacts or {}) do
+    local hitE = estore:getEntity(contact.otherEid)
+    if Roids.isRoid(hitE) then
+      Battle.shipHitsRoid(ship, contact, hitE)
+      break -- deleteme?
     end
   end
 end
@@ -235,6 +245,8 @@ function Jig.update(estore, input, res)
   end
 
   collideBulletsAndRoids(estore)
+
+  collideShipAndRoids(ship, estore)
 
   -- Camera follow
   local camera = estore:getEntityByName("cam1")
