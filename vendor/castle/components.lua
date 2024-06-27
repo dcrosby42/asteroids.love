@@ -45,7 +45,12 @@ Comp.define("bgcolor", { 'color', { 0, 0, 0 } })
 
 Comp.define("pic", PicAttrs)
 
-Comp.define("anim", ext(PicAttrs, { 'timer', '', 'timescale', 1 }))
+Comp.define("anim", ext(PicAttrs, {
+  'duration', -1,         -- WILL BE BACKFILLED BY systems/anim.lua
+  'timer', '',            -- defaults to name (via systems/anim.lua)
+  'timescale', 1,
+  'onComplete', 'repeat', -- repeat | expire
+}))
 
 Comp.define("rect", ext(RectAttrs, { 'style', 'line', 'color', { 1, 1, 1 } })) -- sx,sy?
 
