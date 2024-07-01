@@ -1,4 +1,4 @@
-local Ship = require "modules.asteroids.entities.ship"
+local Workbench = require "modules.asteroids.entities.workbench"
 local Roids = require "modules.asteroids.entities.roids"
 local Explosion = require "modules.asteroids.entities.explosion"
 local Menu = require "modules.asteroids.jigs.menu"
@@ -187,8 +187,8 @@ function Jig.init(parent, estore, res)
     { "state",    { name = "tab", value = tabIdx } },
   })
 
-  Ship.dev_background_nebula_blue(jig, res)
-  Ship.dev_background_starfield1(jig, res)
+  Workbench.dev_background_nebula_blue(jig, res)
+  Workbench.dev_background_starfield1(jig, res)
 
   Tabs[tabIdx].enter(jig, estore)
 

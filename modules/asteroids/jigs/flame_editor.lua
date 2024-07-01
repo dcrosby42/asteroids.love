@@ -1,5 +1,6 @@
 local EventHelpers = require "castle.systems.eventhelpers"
 local Ship = require "modules.asteroids.entities.ship"
+local Workbench = require "modules.asteroids.entities.workbench"
 local Menu = require "modules.asteroids.jigs.menu"
 
 local FlameEditorJig = {}
@@ -38,8 +39,8 @@ function FlameEditorJig.init(parent, estore, res)
   local jig = parent:newEntity({
     { "name", { name = "flame_editor" } },
   })
-  -- local world = Ship.basicWorld(jig, res, E)
-  Ship.dev_background(jig, res)
+  -- local world = Workbench.basicWorld(jig, res, E)
+  Workbench.dev_background(jig, res)
   local ship = Ship.ship(jig, res)
   -- show ship flame: (it's there, but its alpha is 0)
   estore:seekEntity(matchShipFlame, function(flameE)
@@ -47,7 +48,7 @@ function FlameEditorJig.init(parent, estore, res)
     return true
   end)
 
-  local menu = Ship.flameMenu(estore, res)
+  local menu = Workbench.flameMenu(estore, res)
   jig:newComp("state", { name = "menu_eid", value = menu.eid })
 end
 
@@ -64,7 +65,7 @@ end
 
 function FlameEditorJig.update(estore, input, res)
   local menu = estore:getEntityByName("flame_menu")
-  local choices = Ship.Flames
+  local choices = Workbench.Flames
   if menu then
     adjustFlamePosition(estore, input, res)
 

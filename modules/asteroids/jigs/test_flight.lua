@@ -1,4 +1,5 @@
 local Vec = require 'vector-light'
+local Workbench = require "modules.asteroids.entities.workbench"
 local Ship = require "modules.asteroids.entities.ship"
 local Menu = require "modules.asteroids.jigs.menu"
 local State = require "castle.state"
@@ -68,8 +69,8 @@ function Jig.init(parent, estore, res)
     { 'physicsWorld', { allowSleep = false } },
   })
 
-  Ship.dev_background_nebula_blue(jig, res)
-  Ship.dev_background_starfield1(jig, res)
+  Workbench.dev_background_nebula_blue(jig, res)
+  Workbench.dev_background_starfield1(jig, res)
 
   generateRoidField(jig, 100, -4000, 4000)
 

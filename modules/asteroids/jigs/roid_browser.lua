@@ -1,4 +1,4 @@
-local Ship = require "modules.asteroids.entities.ship"
+local Workbench = require "modules.asteroids.entities.workbench"
 local Roids = require "modules.asteroids.entities.roids"
 local Menu = require "modules.asteroids.jigs.menu"
 local State = require "castle.state"
@@ -209,7 +209,7 @@ function Jig.init(parent, estore, res)
     { "name",     { name = "roid_browser" } },
     { "keystate", { handle = { "up", "down", "left", "right", ",", ".", "c" } } },
   })
-  Ship.dev_background(jig, res)
+  Workbench.dev_background(jig, res)
 
   local menu = Jig.newRoidMenu("roid_menu", RoidPics, estore, res)
   jig:newComp("state", { name = "menu_eid", value = menu.eid })

@@ -1,4 +1,5 @@
 local Ship = require "modules.asteroids.entities.ship"
+local Workbench = require "modules.asteroids.entities.workbench"
 local Menu = require "modules.asteroids.jigs.menu"
 
 local BulletEditorJig = {}
@@ -61,13 +62,13 @@ function BulletEditorJig.init(parent, estore, res)
     { "name",     { name = "bullet_editor" } },
     { "keystate", { handle = { "up", "down", "left", "right", ",", "." } } },
   })
-  Ship.dev_background(jig, res)
+  Workbench.dev_background(jig, res)
 
   local ship = Ship.ship(jig, res)
   Ship.fireBullet(ship, "left", "ship_bullets_04", -1500)
   Ship.fireBullet(ship, "right", "ship_bullets_04", -1500)
 
-  local menu = Ship.bulletMenu(estore, res)
+  local menu = Workbench.bulletMenu(estore, res)
   jig:newComp("state", { name = "menu_eid", value = menu.eid })
 end
 
@@ -88,7 +89,7 @@ function BulletEditorJig.update(estore, input, res)
   adjustBulletSize(jig)
 
   local menu = estore:getEntityByName("bullet_menu")
-  local choices = Ship.Bullets
+  local choices = Workbench.Bullets
   -- print("gm")
   if menu then
     local changed = false
