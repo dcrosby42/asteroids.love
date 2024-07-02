@@ -224,7 +224,7 @@ function Jig.update(estore, input, res)
   -- end)
 
   -- Pan the camera
-  -- local cam = estore:getEntityByName("cam1")
+  -- local cam = estore:getEntityByName("camera1")
   -- if cam then
   --   cam.tr.x = cam.tr.x - 0.3
   --   cam.tr.y = cam.tr.y - 0.3

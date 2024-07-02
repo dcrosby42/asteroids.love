@@ -250,7 +250,7 @@ function Jig.update(estore, input, res)
   collideShipAndRoids(ship, estore)
 
   -- Camera follow
-  local camera = estore:getEntityByName("cam1")
+  local camera = estore:getEntityByName("camera1")
   if camera then
     camera.tr.x = ship.tr.x
     camera.tr.y = ship.tr.y

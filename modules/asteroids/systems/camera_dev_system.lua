@@ -1,7 +1,14 @@
+-- camera_dev_system
+--
+-- Based on entities tagged "camera_dev_controller",
+-- uses keystate to manipulate camera location/rotation/zoom
+
 local TweenHelpers = require "castle.tween.tween_helpers"
 local ZoomFactor = 0.2
 local RotFactor = math.pi / 8
+local PanFactor = 200
 local TweenTime = 0.3
+-- local TweenTime = 2
 local Debug = (require "mydebug").sub("camera_dev_system", true, true)
 
 local function tweenit(e, compProps, timerName)
@@ -36,6 +43,18 @@ local function rotateCameraBy(camera, rot)
   rotateCameraTo(camera, r)
 end
 
+local function panCameraTo(camera, x, y)
+  tweenit(camera, { tr = { x = x, y = y } }, "pan")
+end
+
+local function panCameraBy(camera, x, y)
+  x = x + camera.tr.x
+  y = y + camera.tr.y
+  panCameraTo(camera, x, y)
+end
+
+
+
 return defineQuerySystem(
   { tag = 'camera_dev_controller' },
   function(e, estore, input, res)
@@ -51,12 +70,25 @@ return defineQuerySystem(
     if e.keystate.pressed["0"] then
       zoomCameraTo(camera, 1)
       rotateCameraTo(camera, 0)
+      panCameraTo(camera, 0, 0)
     end
     if e.keystate.pressed["]"] then
       rotateCameraBy(camera, -RotFactor)
     end
     if e.keystate.pressed["["] then
       rotateCameraBy(camera, RotFactor)
+    end
+    if e.keystate.pressed["w"] then
+      panCameraBy(camera, 0, -PanFactor)
+    end
+    if e.keystate.pressed["a"] then
+      panCameraBy(camera, -PanFactor, 0)
+    end
+    if e.keystate.pressed["s"] then
+      panCameraBy(camera, 0, PanFactor)
+    end
+    if e.keystate.pressed["d"] then
+      panCameraBy(camera, PanFactor, 0)
     end
   end
 )

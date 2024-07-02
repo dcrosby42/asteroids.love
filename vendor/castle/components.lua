@@ -58,7 +58,7 @@ Comp.define("circle", { 'style', 'line', 'x', 0, 'y', 0, 'r', 0, 'color', { 1, 1
 
 Comp.define("label", ext(RectAttrs,
   { 'text', 'Label',
-    'color', { 0, 0, 0 },
+    'color', { 0.5, 0.5, 0.5 },
     'font', '',
     'align', 'left',
     'valign', 'middle',
