@@ -28,7 +28,7 @@ function Ship.ship(parent, res)
     { 'force',       {} },
     { 'circleShape', { radius = SHIP_RADIUS } },
     -- State
-    { "cooldown",    { name = "lasers", t = 0.05, state = "ready" } },
+    { "cooldown",    { name = "lasers", t = 0.1, state = "ready" } },
   })
   ship:newEntity({
     { "tag", { name = "gun_muzzle" } },
