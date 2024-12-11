@@ -3,7 +3,7 @@ local GM = require('castle.ecs.gamemodule')
 
 local ModuleMap = {
   asteroids = GM.newFromFile("modules/asteroids/resources.lua"),
-  tiling_test = GM.newFromFile("modules/tiling_test/resources.lua"),
+  background_exp = GM.newFromFile("modules/background_exp/resources.lua"),
   joystick_debug = require("modules/joystick_debug")
 }
 
@@ -20,7 +20,11 @@ local M = {}
 
 function M.newWorld()
   local w = {}
-  w.switcher = Switcher.newWorld({ modules = ModuleMap, current = "tiling_test" })
+  w.switcher = Switcher.newWorld({
+    modules = ModuleMap,
+    current = "background_exp",
+    -- current = "asteroids",
+  })
   return w
 end
 
@@ -32,7 +36,7 @@ function M.updateWorld(w, action)
     action = { type = "castle.switcher", index = "joystick_debug" }
   end)
   ifKeyPressed(action, "f3", function()
-    action = { type = "castle.switcher", index = "tiling_test" }
+    action = { type = "castle.switcher", index = "background_exp" }
   end)
   local sidefx
   w.switcher, sidefx = Switcher.updateWorld(w.switcher, action)
