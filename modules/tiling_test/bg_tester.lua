@@ -88,7 +88,7 @@ function M.initStuff(estore, res)
     zoomOutFromViewport(viewport, res)
   end
 
-  W.camera_dev_controller(parent, res, viewport.viewport.camera)
+  W.camera_dev_controller(parent, viewport.viewport.camera)
   -- addCameraDebugVis(estore)
 
 
