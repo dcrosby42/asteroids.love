@@ -40,7 +40,7 @@ function W.camera_dev_controller(parent, name)
     { 'tag',      { name = "camera_dev_controller" } },
     { "state",    { name = "camera", value = name } },
     { "state",    { name = "debug", value = false } },
-    { "keystate", { handle = { "space", "[", "]", "-", "=", "0", "w", "a", "s", "d" } } },
+    { "keystate", { handle = { "[", "]", "-", "=", "0", "w", "a", "s", "d" } } },
   })
 end
 
