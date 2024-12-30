@@ -117,10 +117,9 @@ function Roids.roid(parent, opts)
   opts.debugBody = not not opts.debugBody
   opts.mass = opts.mass or (math.pi * opts.radius * opts.radius)
   local roid = parent:newEntity({
-    { "name", { name = opts.name } },
-    { "tag",  { name = "roid" } },
-    { 'tr',   { x = opts.x, y = opts.y, } },
-    { "vel",  {} },
+    { "tag", { name = "roid" } },
+    { 'tr',  { x = opts.x, y = opts.y, } },
+    { "vel", {} },
     { 'pic', {
       id = opts.picId,
       cx = 0.5,

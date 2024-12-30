@@ -9,8 +9,8 @@ function W.basicWorldAndViewport(estore, res, opts)
   local world = viewport:newEntity({
     { "name", { name = opts.worldName } },
   })
-  W.camera(world, res, opts.cameraName)
-  return world, viewport
+  local camera = W.camera(world, res, opts.cameraName)
+  return world, viewport, camera
 end
 
 function W.viewport(parent, res, cameraName)
@@ -27,12 +27,11 @@ function W.camera(parent, res, name)
   if not name or name == "" then
     name = "camera"
   end
-  local camera = parent:newEntity({
+  return parent:newEntity({
+    { 'tag',  { name = 'camera' } },
     { 'name', { name = name } },
     { 'tr',   { x = 0, y = 0 } }
   })
-  camera.parent.order = 100
-  return camera
 end
 
 function W.camera_dev_controller(parent, name)
@@ -41,7 +40,7 @@ function W.camera_dev_controller(parent, name)
     { 'tag',      { name = "camera_dev_controller" } },
     { "state",    { name = "camera", value = name } },
     { "state",    { name = "debug", value = false } },
-    { "keystate", { handle = { "[", "]", "-", "=", "0", "w", "a", "s", "d" } } },
+    { "keystate", { handle = { "space", "[", "]", "-", "=", "0", "w", "a", "s", "d" } } },
   })
 end
 

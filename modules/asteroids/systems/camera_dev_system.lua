@@ -94,6 +94,11 @@ return defineQuerySystem(
     local camera = estore:getEntityByName(e.states.camera.value)
     if not camera then return end
 
+    if e.keystate.pressed["space"] then
+      print(estore:debugString())
+      -- print("SPACE!")
+    end
+
     if e.keystate.pressed["="] then
       zoomCameraIn(camera, ZoomFactor)
     end

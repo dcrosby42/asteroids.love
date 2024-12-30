@@ -19,6 +19,7 @@ local DrawFuncs = {
   require('castle.drawing.draw_screengrid_entity'),
   require('castle.drawing.draw_pic_entities'),
   require('castle.drawing.draw_anim_entities'),
+  require('castle.drawing.draw_background_entities'),
   require('castle.drawing.draw_geom_entities'),
   require('castle.drawing.draw_button_entities'),
   require('castle.drawing.draw_physics_entities'),
@@ -41,6 +42,8 @@ local function withViewportCameraTransform(vpE, camE, callback)
   love.graphics.pop()
 end
 
+-- DELETEME
+--
 -- Compute the DRAWABLE location x,y of an entity based on its tr comp,
 -- accounting for paralax factors parax,paray (if non-1).
 -- Paralax is computed relative to the current location of the camera as determined
@@ -56,6 +59,8 @@ end
 --   - ...offset is computed based on the camera's distance from the entity.
 --      - If the camera is interestingly transformed and/or parented, this calc will generate unexpected results.
 --      - ...What about multiple renderings from multiple viewports/cams? (this isn't a thing yet... requires indirect viewport.world referencing)
+--
+-- DELETEME
 local function computeLocWithParalax(e, estore)
   if not e.tr then return 0, 0 end
   local x, y = e.tr.x, e.tr.y
@@ -114,8 +119,8 @@ return function(estore, res)
       --
       -- Entity with transformation
       --
-      local x, y = computeLocWithParalax(e, estore)
-      withTransform(x, y, e.tr.r, 0, 0, e.tr.sx, e.tr.sy, function()
+      -- DELETEME: local x, y = computeLocWithParalax(e, estore)
+      withTransform(e.tr.x, e.tr.y, e.tr.r, 0, 0, e.tr.sx, e.tr.sy, function()
         drawEntity(e, res)
         continue()
       end)
