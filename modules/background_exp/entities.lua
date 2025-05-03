@@ -4,7 +4,7 @@ local Roids = require "modules.asteroids.entities.roids"
 
 local Comp = require 'castle.components'
 
-Comp.define('background', Comp._PicAttrs)
+Comp.define("background", Comp._PicAttrs)
 
 local E = {}
 
@@ -30,16 +30,19 @@ function E.initialEntities(res)
   local bgLayer = viewport:newEntity({
     { "name", { name = "bgLayer" } },
   })
-  bgLayer:newEntity({
-    { 'background', {
-      id = "nebula_blue",
-      -- sx = 0.5,
-      -- sy = 0.5,
-    } },
-  })
+  -- bgLayer:newEntity({
+  --   { 'background', {
+  --     id = "nebula_blue",
+  --     -- sx = 0.5,
+  --     -- sy = 0.5,
+  --   } },
+  -- })
   bgLayer:newEntity({
     { 'background', { -- id cx cy sx sy color debug
-      id = "starfield_1",
+      -- id = "starfield_1",
+      -- id = "testpic",
+      id = "testpic2",
+      debug = true,
       -- sx = 0.5,
       -- sy = 0.5,
     } },

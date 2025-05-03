@@ -43,13 +43,38 @@ local function drawBackground(e, background, res)
   end
 
   local ulx, uly, lrx, lry = getProjectedViewportCorners2(viewportE, cameraE)
+
+  -- paralax factor
+  local parax = 0.5
+  local paray = parax
+  -- image offset due to paralax:
+  -- local poffx = w * parax
+  -- local poffy = h * paray
+
+  -- adjust corner locs
+  -- ulx = ulx + poffx
+  -- lrx = lrx + poffx
+  -- uly = uly + poffy
+  -- lry = lry + poffy
+
+  -- ulx = ulx * parax
+  -- lrx = lrx * parax
+  -- uly = uly * paray
+  -- lry = lry * paray
+
+  -- local dx = cameraE.tr.x - e.tr.x
+  -- local dy = cameraE.tr.y - e.tr.y
+  -- local ax = dx * e.tr.parax
+  -- local ay = dy * e.tr.paray
+  -- x = x + ax
+  -- y = y + ay
   local c0, r0, c1, r1 = computeTilingExtents(w, h, ulx, uly, lrx, lry)
 
   -- For each tiling location, stamp a drawing of the bg image
   for row = r0, r1, 1 do
     for col = c0, c1, 1 do
-      background.x = col * w
-      background.y = row * h
+      background.x = (col * w) --+ poffx
+      background.y = (row * h) --+ poffy
       -- A background comp shares common ancestry w pic component
       drawPicLike(background, picRes, res)
     end

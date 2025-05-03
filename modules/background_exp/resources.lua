@@ -86,6 +86,20 @@ return {
     file = "modules/asteroids/images/ships/ship_pics.res.lua",
   },
   {
+    type = "pic",
+    name = "testpic2",
+    data = {
+      path = "modules/background_exp/testpic2.png",
+    },
+  },
+  {
+    type = "pic",
+    name = "testpic",
+    data = {
+      path = "modules/background_exp/testpic.png",
+    },
+  },
+  {
     type = "font",
     name = "narpassword",
     data = {

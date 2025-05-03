@@ -16,10 +16,10 @@ local function withStencil(box, callback)
 end
 
 local DrawFuncs = {
+  require('castle.drawing.draw_background_entities'),
   require('castle.drawing.draw_screengrid_entity'),
   require('castle.drawing.draw_pic_entities'),
   require('castle.drawing.draw_anim_entities'),
-  require('castle.drawing.draw_background_entities'),
   require('castle.drawing.draw_geom_entities'),
   require('castle.drawing.draw_button_entities'),
   require('castle.drawing.draw_physics_entities'),
