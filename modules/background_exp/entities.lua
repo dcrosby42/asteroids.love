@@ -30,21 +30,16 @@ function E.initialEntities(res)
   local bgLayer = viewport:newEntity({
     { "name", { name = "bgLayer" } },
   })
-  -- bgLayer:newEntity({
-  --   { 'background', {
-  --     id = "nebula_blue",
-  --     -- sx = 0.5,
-  --     -- sy = 0.5,
-  --   } },
-  -- })
+
   bgLayer:newEntity({
     { 'background', { -- id cx cy sx sy color debug
-      -- id = "starfield_1",
       -- id = "testpic",
       id = "testpic2",
       debug = true,
-      -- sx = 0.5,
-      -- sy = 0.5,
+      -- id = "starfield_1",
+      -- debug = false,
+      -- sx = 0.3,
+      -- sy = 0.3,
     } },
   })
 
@@ -52,15 +47,6 @@ function E.initialEntities(res)
     { "name", { name = "world1" } },
   })
   local camera = W.camera(world, res, "camera1")
-
-  -- (estore)
-  --   viewport
-  --     ?background?
-  --     world
-  --       r1
-  --       r2
-  --       r3
-  --       camera
 
   -- Camera Dev Controller
   local camera_ctrl = W.camera_dev_controller(parent, viewport.viewport.camera)
@@ -74,42 +60,9 @@ function E.initialEntities(res)
   local r2 = Roids.random(world, { name = "duder", sizeCat = "medium_large", x = 200, y = 0, })
   local r3 = Roids.random(world, { sizeCat = "medium", x = 350, y = 0, })
 
-  -- world:newEntity({
-  --   { "name", { name = "DERP" } },
-  --   { "tr",   { x = 0, y = 0 } },
-  --   { "label", {
-  --     x = 10,
-  --     y = -15,
-  --     text = "DERP",
-  --     color = { 1, 1, 0 }
-  --   } }
-  -- })
-
   -- r2.parent.order = 101
   camera.parent.order = 100
   world:resortChildren()
-
-  -- Background tiler
-  -- world:newEntity({
-  --   { "name", { name = "tilez" } },
-  --   { "bgtiler", {
-  --     name = "tilez",
-  --     picId = "nebula_blue",
-  --     tilew = 4096,
-  --     tileh = 4096,
-  --     debug = debug
-  --   } },
-  -- })
-  -- world:newEntity({
-  --   { "name", { name = "tilez2" } },
-  --   { "bgtiler", {
-  --     name = "tilez2",
-  --     picId = "starfield_1",
-  --     tilew = 4096,
-  --     tileh = 4096,
-  --     debug = debug
-  --   } },
-  -- })
 
   return estore
 end
@@ -122,8 +75,6 @@ function adjustViewportForDebug(viewport, res)
   local w, h = res.data.screen_size.width, res.data.screen_size.height
   local hmargin = math.floor(w * 0.1)
   local vmargin = hmargin
-  -- local vmargin = math.floor(h * 0.1)
-  -- local vmargin = math.floor(hmargin * (h / w))
   viewport.tr.x = hmargin
   viewport.tr.y = vmargin
   viewport.box.w = w - (hmargin * 2)

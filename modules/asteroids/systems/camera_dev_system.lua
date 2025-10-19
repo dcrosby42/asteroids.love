@@ -9,7 +9,7 @@ local RotFactor = math.pi / 8
 local PanFactor = 200
 local TweenTime = 0.3
 -- local TweenTime = 2
-local Debug = (require "mydebug").sub("camera_dev_system", true, true)
+local Debug = (require "mydebug").sub("camera_dev_system", false, false)
 
 local round = math.round
 

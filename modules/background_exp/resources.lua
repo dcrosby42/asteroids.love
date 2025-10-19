@@ -36,8 +36,8 @@ return {
           -- "modules.asteroids.systems.devsystem",
           -- "modules.asteroids.systems.ship_workbench_system",
           "modules.asteroids.systems.camera_dev_system",
-          "modules.tiling_test.bg_tester",
-          "modules.tiling_test.bg_tiler_system",
+          -- "modules.tiling_test.bg_tester",
+          -- "modules.tiling_test.bg_tiler_system",
         }
       },
       drawSystems = {

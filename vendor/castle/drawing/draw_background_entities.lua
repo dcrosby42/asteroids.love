@@ -34,6 +34,8 @@ local function drawBackground(e, background, res)
   end
 
   local w, h = picRes.rect.w, picRes.rect.h
+  w = w * background.sx
+  h = h * background.sy
 
   -- Compute in-world viewing bounds based on viewport+camera
   local viewportE, cameraE = ViewportHelpers.findOwningViewportAndCamera(e)
