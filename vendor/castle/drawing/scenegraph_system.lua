@@ -41,8 +41,8 @@ local function withViewportCameraTransform(vpE, camE, callback)
   love.graphics.pop()
 end
 
--- Compute the DRAWABLE location x,y of an entity based on its tr comp,
--- accounting for paralax factors parax,paray (if non-1).
+-- Compute the DRAWABLE location x,y of an entity based on its paralax and tr comps,
+-- accounting for paralax factors paralax.px, paralax.py (if non-1).
 -- Paralax is computed relative to the current location of the camera as determined
 -- by the given entity's ancestor viewport, assuming both viewport and camera exist.
 -- The x,y offset incurred by paralax is ONLY applied at draw-time, and
@@ -57,18 +57,21 @@ end
 --      - If the camera is interestingly transformed and/or parented, this calc will generate unexpected results.
 --      - ...What about multiple renderings from multiple viewports/cams? (this isn't a thing yet... requires indirect viewport.world referencing)
 local function computeLocWithParalax(e, estore)
+  -- Nothing to be done with entities lacking a tr:
   if not e.tr then return 0, 0 end
   local x, y = e.tr.x, e.tr.y
-  if e.tr.parax ~= 1 or e.tr.paray ~= 1 then
-    local camera = findOwningViewportCam(e)
-    if camera then
-      local dx = camera.tr.x - e.tr.x
-      local dy = camera.tr.y - e.tr.y
-      local ax = dx * e.tr.parax
-      local ay = dy * e.tr.paray
-      x = x + ax
-      y = y + ay
-    end
+  -- Nothing further to do if no paralax:
+  if not e.paralax then return x, y end
+
+  -- Paralax is computed based on camera/viewport location
+  local camera = findOwningViewportCam(e)
+  if camera then
+    local dx = camera.tr.x - e.tr.x
+    local dy = camera.tr.y - e.tr.y
+    local ax = dx * e.paralax.px
+    local ay = dy * e.paralax.py
+    x = x + ax
+    y = y + ay
   end
   return x, y
 end

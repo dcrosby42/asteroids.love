@@ -39,8 +39,9 @@ function Workbench.dev_stars_bg(parent, configs)
     local picw, pich = 4096, 4096
     local offx, offy = -(2 * picw), -(2 * pich)
     local comps = {
-      { "name", { name = picId } },
-      { "tr",   { parax = config.paralax, paray = config.paralax } },
+      { "name",    { name = picId } },
+      { "tr",      {} },
+      { "paralax", { px = config.paralax, py = config.paralax } },
     }
     -- tile-in a few copies of the bg image
     for i = 0, 2 do
@@ -61,7 +62,11 @@ function Workbench.dev_background_nebula_blue(parent, res)
   local offx, offy = -(2 * picw), -(2 * pich)
   local comps = {
     { "name", { name = "background_nebula" } },
-    { "tr",   { parax = 0.5, paray = 0.5 } },
+    { "tr",   {} },
+    { "paralax", {
+      px = 0.5,
+      py = 0.5,
+    } },
   }
   -- tile-in a few copies of the bg image
   for i = 0, 2 do
@@ -80,8 +85,9 @@ function Workbench.dev_background_starfield1(parent, res)
   local picw, pich = 4096, 4096
   local offx, offy = -(2 * picw), -(2 * pich)
   local comps = {
-    { "name", { name = "background_starfield_1" } },
-    { "tr",   { parax = 1, paray = 1 } },
+    { "name",    { name = "background_starfield_1" } },
+    { "tr",      {} },
+    { "paralax", { px = 0.8, py = 0.8 } },
   }
   -- tile-in a few copies of the bg image
   for i = 0, 2 do
@@ -100,8 +106,9 @@ function Workbench.dev_background_starfield2(parent, res)
   local picw, pich = 4096, 4096
   local offx, offy = -(2 * picw), -(2 * pich)
   local comps = {
-    { "name", { name = "background_starfield_1" } },
-    { "tr",   { parax = 0.5, paray = 0.5 } },
+    { "name",    { name = "background_starfield_1" } },
+    { "tr",      {} },
+    { "paralax", { px = 0.5, py = 0.5 } },
   }
   -- tile-in a few copies of the bg image
   for i = 0, 2 do
