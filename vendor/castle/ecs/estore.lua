@@ -456,18 +456,26 @@ function Estore:_linkEntityToParent(e, comp)
 
   -- Join our sibling entities in our parent entity's _children list:
   local siblings = parentEntity._children
-  table.insert(siblings, e)
 
-  -- Try to ensure comp.order makes sense
+  table.insert(siblings, e)
   local doReorder = true
+
+  -- figure out where the new child entity should be in the ordering of children:
   if not comp.order or comp.order == '' then
-    local myOrder = #siblings + 1
-    if #siblings > 0 then
-      local lastOrder = siblings[#siblings].order
-      if lastOrder then myOrder = lastOrder + 1 end
-    end
-    comp.order = myOrder
     doReorder = false
+    if #siblings == 1 then
+      -- we're the only child; give us 1 and be done
+      comp.order = 1
+    else
+      local highestOrder = 0
+      for i = 1, #siblings - 1 do -- we were placed at the end; stop short of us
+        local plink = siblings[i].parent
+        if plink.order > highestOrder then
+          highestOrder = plink.order
+        end
+      end
+      comp.order = highestOrder + 1
+    end
   end
   -- (maybe) rearrange the children in accordance to their stated ordering
   if doReorder and not self._reorderLockout then

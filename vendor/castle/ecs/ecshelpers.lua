@@ -1,6 +1,8 @@
 local Predicates = require "castle.ecs.predicates"
 local Query = require "castle.ecs.query"
 
+local newTransform = love.math.newTransform
+
 -- TODO: phase this out of usage
 function requireModules(reqs)
   local modules = {}
@@ -198,33 +200,35 @@ function findEntities(estore, filter)
 end
 
 -- Given a tr component, return a new love2d transform
+-- optional rotx,roty: center of rotation (default 0,0)
 function trToTransform(tr, rotx, roty)
   if tr then
-    return love.math.newTransform(tr.x, tr.y, tr.r, tr.sx, tr.sy, rotx, roty)
+    return newTransform(tr.x, tr.y, tr.r, tr.sx, tr.sy, rotx, roty)
   end
-  return love.math.newTransform()
+  return newTransform()
 end
 
 -- Compute x,y offset of camera's center to the upper-left corner of the viewport
-function computeCameraOffset(vpE, camE)
+-- This returns an x,y offset in worldspace coords, based on the camera's "zoom" (sx,sy)
+function computeViewportCameraOffset(vpE, camE)
   local offx, offy = 0, 0
   if vpE and vpE.box then
     offx, offy = vpE.box.w / 2, vpE.box.h / 2
   end
-  return love.math.newTransform(0, 0, 0, camE.tr.sx, camE.tr.sy):transformPoint(offx, offy)
+  return newTransform(0, 0, 0, camE.tr.sx, camE.tr.sy):transformPoint(offx, offy)
 end
 
 function viewportCameraTransform(vpE, camE)
   if not camE or not camE.tr then
-    return love.math.newTransform()
+    return newTransform()
   end
 
   -- Start building a "camera transform"
   local tr = camE.tr
-  local transf = love.math.newTransform()
+  local transf = newTransform()
 
   -- Translate the camera's pos to the center of the viewport
-  local offx, offy = computeCameraOffset(vpE, camE)
+  local offx, offy = computeViewportCameraOffset(vpE, camE)
   transf:translate(tr.x - offx, tr.y - offy)
 
   -- Rotate, centered on the camera:
@@ -247,11 +251,11 @@ end
 function computeEntityTransform(e, relativeToEnt)
   if e == nil or e.eid == nil then
     -- _root node in estore has no eid nor transform, must stop here
-    return love.math.newTransform()
+    return newTransform()
   end
   if relativeToEnt and e.eid == relativeToEnt.eid then
     -- computation halts at specified ancestor entity, when given
-    return love.math.newTransform()
+    return newTransform()
   end
 
   -- Compute a love2d Transform for the entity based on its tr component.

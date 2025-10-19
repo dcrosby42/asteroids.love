@@ -32,20 +32,28 @@ function Entity:getChildren()
 end
 
 function Entity:newChild(compInfos, subs)
+  -- We'll be imposing our own "parent" component in the new child entity, to link THIS entity properly as its parent.
   local parentInfo = { 'parent', { parentEid = self.eid } }
   if compInfos then
     local parentInfoFound = false
     for i, info in ipairs(compInfos) do
       if info[1] == 'parent' then
-        if parentInfoFound then
+        if parentInfoFound and info[2].eid and info[2].eid ~= self.eid then
+          -- This is more a Warning than Error since we're going to mostly just ignore this.
           error("ERR newChild() cannot accept two 'parent' comp types")
         end
         parentInfoFound = true
-        if info[2].order then parentInfo[2].order = info[2].order end
+        if info[2].order then
+          -- The erroneous parent descriptor contains an "order" value, let's borrow it into OUR descriptor
+          parentInfo[2].order = info[2].order
+        end
+        -- replace the given parent descriptor with ours
         compInfos[i] = parentInfo
       end
     end
-    if not parentInfoFound then table.insert(compInfos, parentInfo) end
+    if not parentInfoFound then
+      table.insert(compInfos, parentInfo)
+    end
   else
     compInfos = { parentInfo }
   end

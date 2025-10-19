@@ -26,17 +26,34 @@ function entityDebugString(e)
 end
 
 function entityName(e)
-  if e.name and e.name.name then
-    return e.name.name .. " (" .. tostring(e.eid) .. ")"
-  elseif e.tag and e.tag.name then
-    return "[tag=" .. e.tag.name .. "] (" .. tostring(e.eid) .. ")"
-  else
-    return tostring(e.eid)
+  -- if e.name and e.name.name then
+  --   return e.name.name .. " (" .. tostring(e.eid) .. ")"
+  -- elseif e.tag and e.tag.name then
+  --   return "[tag=" .. e.tag.name .. "] (" .. tostring(e.eid) .. ")"
+  -- else
+  --   return tostring(e.eid)
+  -- end
+  local n = ""
+  n = n .. tostring(e.eid)
+  if e.name and e.name.name and #e.name.name > 0 then
+    n = n .. "." .. e.name.name
   end
+  if e.tags then
+    n = n .. "["
+    for tname, _tag in pairs(e.tags) do
+      n = n .. tname .. " "
+    end
+    n = n .. "]"
+  end
+  return n
 end
 
 function entityTreeDebugString(e, indent)
-  local s = indent .. entityName(e) .. ": \n"
+  local chOrder = ""
+  if e.parent then
+    chOrder = tostring(e.parent.order) .. ": "
+  end
+  local s = indent .. chOrder .. entityName(e) .. ": \n"
   for _, ch in ipairs(e._children) do
     s = s .. entityTreeDebugString(ch, indent .. "  ")
   end

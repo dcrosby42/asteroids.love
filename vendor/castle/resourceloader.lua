@@ -247,7 +247,7 @@ function LazyResourceSet:get(name)
     return res
   end
   -- no cached resoure or builder func:
-  error(self._.private.name .. ": No resource or constructor for key '" .. name .. "'")
+  error(self._private.name .. ": No resource or constructor for key '" .. name .. "'")
 end
 
 function LazyResourceSet:remove(name)
@@ -287,7 +287,7 @@ end
 function ResourceRoot:get(name)
   local resSet = self[name]
   if resSet == nil then
-    resSet = LazyResourceSet:new()
+    resSet = LazyResourceSet:new(name)
     self[name] = resSet
   end
   return resSet
