@@ -16,7 +16,8 @@ function Query:new(o)
   return o
 end
 
--- Accepts an entity store, returns a list of 0 or more matching Entities.
+---Accepts an entity store, returns a list of 0 or more matching Entities.
+---@param estore Estore the estore
 function Query:execute(estore)
   local ents = {}
   if self.indexLookup then

@@ -1,3 +1,4 @@
+---@class Entity
 local Entity = {}
 
 function Entity:new(o)
@@ -7,6 +8,7 @@ function Entity:new(o)
   return o
 end
 
+---@return Estore
 function Entity:getEstore()
   return self._estore
 end

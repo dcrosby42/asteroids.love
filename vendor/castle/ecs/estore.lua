@@ -5,6 +5,7 @@ require 'castle.ecs.debughelpers'
 
 
 
+---@class Estore
 local Estore = {}
 
 function Estore:new(o)
