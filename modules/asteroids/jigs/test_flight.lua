@@ -96,10 +96,13 @@ function Jig.init(parent, estore, res)
   end
 
   -- Zoom the camera out a bit
-  local cam = findOwningViewportCam(jig)
-  if cam then
-    cam.tr.sx = 1.7
-    cam.tr.sy = 1.7
+  local camera_name = State.get(parent, "camera_name")
+  if camera_name then
+    local cam = parent:getEntityStore():getEntityByName(camera_name)
+    if cam then
+      cam.tr.sx = 1.7
+      cam.tr.sy = 1.7
+    end
   end
 
   return jig

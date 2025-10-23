@@ -1,0 +1,36 @@
+estore
+  *viewport
+    - viewport{camera=camera1}
+    - name=viewport
+    - tr
+    - box
+    *world
+      - name=world1
+      *camera
+        - tag=camera
+        - name=camera1
+        - tr
+
+estore
+  *main_scene
+    - scene
+    *viewport
+      - viewport{scene_eid=scene1, camera_eid=camera1}
+      - tr
+      - rect
+  *scene1
+    - scene
+    *space_bg
+      - repeating_image
+      - paralax
+    *world1
+      *box1
+      *box2
+      *ground1
+      *ground2
+      *ground...N
+      *camera1
+        - camera
+        - tr
+    
+  

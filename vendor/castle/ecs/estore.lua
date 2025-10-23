@@ -379,6 +379,8 @@ function Estore:queryFirstEntity(query)
   return query(self)[1]
 end
 
+---@param name string
+---@return Entity
 function Estore:getEntityByName(name)
   if not name then error("Estore:getEntityByName: name is required") end
   if name == '' then error("Estore:getEntityByName: name can't be blank") end

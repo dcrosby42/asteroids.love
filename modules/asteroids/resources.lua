@@ -27,7 +27,7 @@ return {
       },
       drawSystems = {
         data = {
-          "castle.drawing.scenegraph_system",
+          "castle.drawing.scenegraph_system2",
         }
       },
     },

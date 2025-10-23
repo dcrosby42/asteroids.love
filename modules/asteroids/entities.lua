@@ -2,6 +2,7 @@ local Debug = require("mydebug").sub("Asteroids", true, true)
 local Estore = require "castle.ecs.estore"
 local inspect = require "inspect"
 local Workbench = require "modules.asteroids.entities.workbench"
+local SceneBased = require "modules.asteroids.entities.scene_based"
 
 local W = require "modules.asteroids.entities.world"
 
@@ -16,7 +17,9 @@ function E.initialEntities(res)
 
   -- E.asteroidsGame(estore, res)
 
-  Workbench.workbench(estore, res)
+  -- Workbench.workbench(estore, res)
+
+  SceneBased.populate(estore, res)
 
   return estore
 end
