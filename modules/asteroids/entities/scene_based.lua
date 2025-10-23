@@ -25,7 +25,8 @@ function SB.populate(estore, res)
     { 'viewport', {
       scene = scene_name,
       camera = camera_name,
-
+      blockout = false,
+      -- bgcolor = {0,0,0},
     } },
     { 'tr',   {} },
     { 'box',  { w = screen_w, h = screen_h, debug = false } }
