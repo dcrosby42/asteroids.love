@@ -55,6 +55,9 @@ function Estore:_makeEnt(eid)
   return e
 end
 
+---@param compList table
+---@param subs table|nil
+---@return Entity e
 function Estore:newEntity(compList, subs)
   local eid = self:nextEid()
   local e = self:_makeEnt(eid)

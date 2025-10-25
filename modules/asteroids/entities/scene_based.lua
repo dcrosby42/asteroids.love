@@ -1,7 +1,9 @@
 local W = require "modules.asteroids.entities.world"
+local Ship = require "modules.asteroids.entities.ship"
 
 local SB = {}
 
+---@param estore Estore
 function SB.populate(estore, res)
   local scene_name = "scene1"
   local camera_name = "camera1"
@@ -25,11 +27,20 @@ function SB.populate(estore, res)
     { 'viewport', {
       scene = scene_name,
       camera = camera_name,
-      blockout = false,
-      -- bgcolor = {0,0,0},
+      blockout = true,
+      bgcolor = { 0, 0.4, 0 },
+      use_bgcolor = false,
     } },
-    { 'tr',   {} },
-    { 'box',  { w = screen_w, h = screen_h, debug = false } }
+    { 'tr',   { x = 405, y = 305, cx = 0.5, cy = 0.5 } },
+    { 'box', {
+      -- w = screen_w,
+      -- h = screen_h,
+      w = 800,
+      h = 600,
+      cx = 0.5,
+      cy = 0.5,
+      debug = false,
+    } },
   })
 
   local scene1 = estore:newEntity({
@@ -47,15 +58,21 @@ function SB.populate(estore, res)
     { 'tr',   { x = 0, y = 0 } }
   })
 
-  local workbench = world1:newEntity({
-    { "name",     { name = "ship_workbench" } },
-    { "state",    { name = "jig", value = "" } },
-    { "state",    { name = "debug_draw", value = false } },
-    { "state",    { name = "camera_name", value = camera_name } },
-    { "keystate", { handle = { "1", "2", "3", "4", "5", "6" } } },
-  })
-
   W.camera_dev_controller(estore, camera_name)
+
+  -- local workbench = world1:newEntity({
+  --   { "name",     { name = "ship_workbench" } },
+  --   { "state",    { name = "jig", value = "" } },
+  --   { "state",    { name = "debug_draw", value = false } },
+  --   { "state",    { name = "camera_name", value = camera_name } },
+  --   { "keystate", { handle = { "1", "2", "3", "4", "5", "6" } } },
+  -- })
+
+  local Workbench = require "modules.asteroids.entities.workbench"
+  Workbench.dev_background_nebula_blue(space_bg, res)
+  Workbench.dev_background_starfield1(space_bg, res)
+
+  local ship = Ship.ship(world1, res)
 end
 
 return SB

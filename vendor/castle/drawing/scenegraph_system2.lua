@@ -70,9 +70,21 @@ local function drawEntity2(e, res)
   G.pop()
 end
 
+---@param box table
+---@return number x
+---@return number y
+---@return number w
+---@return number h
+local function box_to_xywh(box)
+  return box.x - (box.cx * box.w),
+      box.y - (box.cy * box.h),
+      box.w,
+      box.h
+end
+
 local function startBlockoutStencil(box)
   G.stencil(function()
-    G.rectangle("fill", box.x, box.y, box.w, box.h)
+    G.rectangle("fill", box_to_xywh(box))
   end, "replace", 1)
   -- Only allow rendering on pixels which have a stencil value greater than 0.
   G.setStencilTest("greater", 0)
@@ -90,8 +102,16 @@ drawViewport2 = function(e, res)
     -- error("drawViewport2: bad scene_name " .. tostring(e.viewport.scene_name)
     --   .. "; viewport: " .. U.as_lua(e.viewport))
   end
+  local debug = not not (e.box and e.box.debug)
+
   if e.viewport.blockout and e.box then
     startBlockoutStencil(e.box)
+  end
+
+  if e.viewport.use_bgcolor then
+    G.setColor(e.viewport.bgcolor)
+    -- G.rectangle("fill", e.box.x, e.box.y, e.box.w, e.box.h)
+    G.rectangle("fill", box_to_xywh(e.box))
   end
 
   -- Generate view "projection" based on camera (if found)
@@ -108,6 +128,15 @@ drawViewport2 = function(e, res)
 
   if camera then
     G.pop()
+    if debug then
+      G.setColor(1, 0.5, 0)
+      G.circle("line", 0, 0, 15)
+    end
+  end
+
+  if debug then
+    G.setColor(1, 1, 0)
+    G.circle("line", 0, 0, 10)
   end
 
   if e.viewport.blockout and e.box then
