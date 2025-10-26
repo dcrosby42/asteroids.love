@@ -39,7 +39,7 @@ function SB.populate(estore, res)
       h = 600,
       cx = 0.5,
       cy = 0.5,
-      debug = false,
+      debug = true,
     } },
   })
 
@@ -60,6 +60,28 @@ function SB.populate(estore, res)
 
   W.camera_dev_controller(estore, camera_name)
 
+  local devgrid1 = space_bg:newEntity({
+    { "devgrid", {
+      tilew = 100,
+      tileh = 100,
+      color = { 0.5, 0.5, 0.5 },
+      draw_coords = true,
+      draw_coords_y = 12,
+      dot_size = 3
+    } },
+    { "paralax", { px = 0.8, py = 0.8 } },
+  })
+  local devgrid2 = space_bg:newEntity({
+    { "devgrid", {
+      tilew = 100,
+      tileh = 100,
+      color = { 1, 1, 1 },
+      draw_coords = true,
+      dot_size = 3
+    } },
+    { "paralax", { px = 0.5, py = 0.5 } },
+  })
+
   -- local workbench = world1:newEntity({
   --   { "name",     { name = "ship_workbench" } },
   --   { "state",    { name = "jig", value = "" } },
@@ -68,9 +90,9 @@ function SB.populate(estore, res)
   --   { "keystate", { handle = { "1", "2", "3", "4", "5", "6" } } },
   -- })
 
-  local Workbench = require "modules.asteroids.entities.workbench"
-  Workbench.dev_background_nebula_blue(space_bg, res)
-  Workbench.dev_background_starfield1(space_bg, res)
+  -- local Workbench = require "modules.asteroids.entities.workbench"
+  -- Workbench.dev_background_nebula_blue(space_bg, res)
+  -- Workbench.dev_background_starfield1(space_bg, res)
 
   local ship = Ship.ship(world1, res)
 end

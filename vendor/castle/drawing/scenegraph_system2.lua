@@ -1,10 +1,36 @@
 local U = require "utils"
+local U = require "utils"
 local withTransform = require("castle.drawing.with_transform")
 local BGColorSystem = require("castle.drawing.bgcolor_system")
 local ViewportHelpers = require "castle.ecs.viewport_helpers"
 local findOwningViewportCam = ViewportHelpers.findOwningViewportCamera
 local G = love.graphics
 local newTransform = love.math.newTransform
+local Comps = require "castle.components"
+
+Comps.define("devgrid", {
+  "left", 0, "right", 1000, "top", 0, "bottom", 1000,
+  "tilew", 100, "tileh", 100,
+  "color", { 1, 1, 1 },
+  "dot_size", 3,
+  "draw_coords", true,
+  "draw_coords_y", 0
+})
+
+local function drawDevGrid(e, res)
+  if not e.devgrid then return end
+  local dg = e.devgrid
+  G.setColor(dg.color)
+  for row = dg.top / dg.tileh, dg.bottom / dg.tileh do
+    for col = dg.left / dg.tilew, dg.right / dg.tilew do
+      local x, y = col * dg.tilew, row * dg.tileh
+      G.circle("fill", x, y, dg.dot_size)
+      if dg.draw_coords then
+        G.print(tostring(x) .. "," .. tostring(y), x, y + dg.draw_coords_y)
+      end
+    end
+  end
+end
 
 local DrawFuncs = {
   require('castle.drawing.draw_screengrid_entity'),
@@ -16,6 +42,7 @@ local DrawFuncs = {
   require('castle.drawing.draw_label_entities'),
   require('castle.drawing.draw_sound_entities'),
   require('castle.drawing.draw_touch_debugs'),
+  drawDevGrid,
 }
 
 local function trToTransform2(tr)
@@ -38,33 +65,60 @@ local function computeEntityTransform2(e, relativeToEnt)
   if e.tr then
     transform:apply(trToTransform2(e.tr))
   end
-  -- DELETEME
-  -- if e.viewport then
-  --   -- Viewports, in addition to their own transform, apply further transformation
-  --   -- based on their cameras (when they have cameras)
-  --   local camE = e:getEstore():getEntityByName(e.viewport.camera)
-  --   transform:apply(viewportCameraTransform(e, camE))
-  -- end
+  return transform
+end
+
+--- paralax factor:
+---   -1: reverse full paralax
+---   -0.5: reverse half paralax, entity appears to "move" at half speed
+---   0: no paralax, apparent motion same as everything else
+---   0.5: half paralax, entity appears to "move" at half speed
+---   1: full paralax, entity appears affixed to camera
+local function applyParalax(e, transform, cameraEnt)
+  local cameraTransform = computeEntityTransform2(cameraEnt)
+  local cx, cy = cameraTransform:transformPoint(cameraEnt.tr.x, cameraEnt.tr.y)
+  local ex, ey -- # = transform:transformPoint(e.tr.x, e.tr.y)
+  if e.tr then
+    ex, ey = transform:transformPoint(e.tr.x, e.tr.y)
+  else
+    -- cope with entities that lack a tr
+    ex, ey = 0, 0
+  end
+  local dx = (cx - ex)
+  local dy = (cy - ey)
+  -- Compute "drag along" factor... how much toward the camera to move the bg entity
+  local mysterious_correction = 0.5 -- I CANNOT FIGURE OUT WHY I NEED THIS.  Paralax seems 2x as powerful as I think it should be.
+  -- Translate to achieve false paralax:
+  transform:translate(
+    dx * e.paralax.px * mysterious_correction,
+    dy * e.paralax.py * mysterious_correction)
   return transform
 end
 
 local drawViewport2
 
-local function drawEntity2(e, res)
+---@param e Entity
+---@param res table
+---@param camera_ent Entity|nil
+local function drawEntity2(e, res, camera_ent)
   local transform = computeEntityTransform2(e)
+  if e.paralax and camera_ent then
+    transform = applyParalax(e, transform, camera_ent)
+  end
   G.push()
   G.applyTransform(transform)
 
   if e.viewport then
     drawViewport2(e, res)
   end
+
   for i = 1, #DrawFuncs do
     DrawFuncs[i](e, res)
   end
 
   local childs = e:getChildren()
   for i = 1, #childs do
-    drawEntity2(childs[i], res)
+    drawEntity2(childs[i], res, camera_ent)
   end
 
   G.pop()
@@ -124,7 +178,7 @@ drawViewport2 = function(e, res)
 
   -- Draw the actual scene
   -- EDraw.draw_entity(state, scene, vp_ent)
-  drawEntity2(scene, res)
+  drawEntity2(scene, res, camera)
 
   if camera then
     G.pop()

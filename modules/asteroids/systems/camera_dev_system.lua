@@ -7,7 +7,7 @@ local TweenHelpers = require "castle.tween.tween_helpers"
 local ZoomFactor = 0.2
 local RotFactor = math.pi / 8
 local PanFactor = 200
-local TweenTime = 0.3
+local TweenTime = 0.5
 -- local TweenTime = 2
 local Debug = (require "mydebug").sub("camera_dev_system", false, false)
 
