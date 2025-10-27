@@ -73,7 +73,9 @@ local function trToTransform2(tr)
   return newTransform(tr.x, tr.y, tr.r, tr.sx, tr.sy, tr.cx, tr.cy)
 end
 
-local function computeEntityTransform2(ent, relativeToEnt)
+local applyParalax
+
+local function computeEntityTransform2(ent, relativeToEnt, viewportEnt)
   if ent == nil or ent.eid == nil then
     -- _root node in estore has no eid nor transform, must stop here
     return newTransform()
@@ -88,6 +90,9 @@ local function computeEntityTransform2(ent, relativeToEnt)
   local transform = computeEntityTransform2(ent:getParent(), relativeToEnt)
   if ent.tr then
     transform:apply(trToTransform2(ent.tr))
+  end
+  if ent.paralax and viewportEnt then
+    transform = applyParalax(ent, transform, viewportEnt)
   end
   return transform
 end
@@ -156,7 +161,7 @@ Comps.define("devbg", {})
 local function drawDevBg(bgEnt, res, viewportEnt)
   if not bgEnt.devbg then return end
   --- Determine the AABB bounds of the viewport relative to the current ent transform
-  local relVpBounds = getViewportAABB(viewportEnt, computeEntityTransform2(bgEnt))
+  local relVpBounds = getViewportAABB(viewportEnt, computeEntityTransform2(bgEnt, nil, viewportEnt))
 
   -- What's the upper-left/lower-right tile numbers intersected by the viewport aabb?
   local tw, th = 100, 100
@@ -194,7 +199,7 @@ local DrawFuncs = {
 ---   0: no paralax, apparent motion same as everything else
 ---   0.5: half paralax, entity appears to "move" at half speed
 ---   1: full paralax, entity appears affixed to camera
-local function applyParalax(e, transform, viewportEnt)
+function applyParalax(e, transform, viewportEnt)
   if not viewportEnt then return end
   local cameraEnt = getViewportCamera(viewportEnt)
   if not cameraEnt then return end
@@ -225,10 +230,10 @@ local drawViewport2
 ---@param res table
 ---@param viewportEnt Entity|nil
 local function drawEntity2(e, res, viewportEnt)
-  local transform = computeEntityTransform2(e)
-  if e.paralax and viewportEnt then
-    transform = applyParalax(e, transform, viewportEnt)
-  end
+  local transform = computeEntityTransform2(e, nil, viewportEnt)
+  -- if e.paralax and viewportEnt then
+  --   transform = applyParalax(e, transform, viewportEnt)
+  -- end
   G.push()
   G.applyTransform(transform)
 

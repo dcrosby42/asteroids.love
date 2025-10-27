@@ -61,8 +61,9 @@ function SB.populate(estore, res)
   W.camera_dev_controller(estore, camera_name)
 
   local devbg = space_bg:newEntity({
-    { "devbg", {} },
+    { "devbg",   {} },
     -- { "paralax", { px = 0.8, py = 0.8 } },
+    { "paralax", { px = 0.5, py = 0.5 } },
   })
 
   -- local devgrid1 = space_bg:newEntity({
@@ -74,7 +75,7 @@ function SB.populate(estore, res)
   --     draw_coords_y = 12,
   --     dot_size = 3
   --   } },
-  --   { "paralax", { px = 0.8, py = 0.8 } },
+  --   -- { "paralax", { px = 0.8, py = 0.8 } },
   -- })
   -- local devgrid2 = space_bg:newEntity({
   --   { "devgrid", {
