@@ -31,12 +31,12 @@ function SB.populate(estore, res)
       bgcolor = { 0, 0.4, 0 },
       use_bgcolor = false,
     } },
-    { 'tr',   { x = 405, y = 305, cx = 0.5, cy = 0.5 } },
+    { 'tr',   { x = screen_w / 2, y = screen_h / 2, cx = 0, cy = 0 } },
     { 'box', {
-      -- w = screen_w,
-      -- h = screen_h,
-      w = 800,
-      h = 600,
+      w = screen_w,
+      h = screen_h,
+      -- w = 800,
+      -- h = 600,
       cx = 0.5,
       cy = 0.5,
       debug = true,
@@ -60,27 +60,32 @@ function SB.populate(estore, res)
 
   W.camera_dev_controller(estore, camera_name)
 
-  local devgrid1 = space_bg:newEntity({
-    { "devgrid", {
-      tilew = 100,
-      tileh = 100,
-      color = { 0.5, 0.5, 0.5 },
-      draw_coords = true,
-      draw_coords_y = 12,
-      dot_size = 3
-    } },
-    { "paralax", { px = 0.8, py = 0.8 } },
+  local devbg = space_bg:newEntity({
+    { "devbg", {} },
+    -- { "paralax", { px = 0.8, py = 0.8 } },
   })
-  local devgrid2 = space_bg:newEntity({
-    { "devgrid", {
-      tilew = 100,
-      tileh = 100,
-      color = { 1, 1, 1 },
-      draw_coords = true,
-      dot_size = 3
-    } },
-    { "paralax", { px = 0.5, py = 0.5 } },
-  })
+
+  -- local devgrid1 = space_bg:newEntity({
+  --   { "devgrid", {
+  --     tilew = 100,
+  --     tileh = 100,
+  --     color = { 0.5, 0.5, 0.5 },
+  --     draw_coords = true,
+  --     draw_coords_y = 12,
+  --     dot_size = 3
+  --   } },
+  --   { "paralax", { px = 0.8, py = 0.8 } },
+  -- })
+  -- local devgrid2 = space_bg:newEntity({
+  --   { "devgrid", {
+  --     tilew = 100,
+  --     tileh = 100,
+  --     color = { 1, 1, 1 },
+  --     draw_coords = true,
+  --     dot_size = 3
+  --   } },
+  --   { "paralax", { px = 0.5, py = 0.5 } },
+  -- })
 
   -- local workbench = world1:newEntity({
   --   { "name",     { name = "ship_workbench" } },
