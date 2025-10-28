@@ -1,9 +1,6 @@
 local U = require "utils"
-local U = require "utils"
-local withTransform = require("castle.drawing.with_transform")
 local BGColorSystem = require("castle.drawing.bgcolor_system")
 local ViewportHelpers = require "castle.ecs.viewport_helpers"
-local findOwningViewportCam = ViewportHelpers.findOwningViewportCamera
 local min = math.min
 local max = math.max
 local floor = math.floor
@@ -231,9 +228,6 @@ local drawViewport2
 ---@param viewportEnt Entity|nil
 local function drawEntity2(e, res, viewportEnt)
   local transform = computeEntityTransform2(e, nil, viewportEnt)
-  -- if e.paralax and viewportEnt then
-  --   transform = applyParalax(e, transform, viewportEnt)
-  -- end
   G.push()
   G.applyTransform(transform)
 
@@ -271,8 +265,6 @@ drawViewport2 = function(viewportEnt, res)
   local scene = viewportEnt:getEstore():getEntityByName(viewportEnt.viewport.scene)
   if not scene then
     error("drawViewport2: bad scene_name " .. tostring(viewportEnt.viewport.scene))
-    -- error("drawViewport2: bad scene_name " .. tostring(e.viewport.scene_name)
-    --   .. "; viewport: " .. U.as_lua(e.viewport))
   end
   local debug = not not (viewportEnt.box and viewportEnt.box.debug)
 
@@ -314,12 +306,6 @@ drawViewport2 = function(viewportEnt, res)
   if viewportEnt.viewport.blockout and viewportEnt.box then
     stopBlackoutStencil()
   end
-
-  -- Draw a highlight border around the viewport
-  -- if e.viewport.border and e.rect then
-  -- Draw.rect(e.rect, "line", C.white)
-  -- Draw.circle(0, 0, 2, "fill", C.red)
-  -- end
 end
 
 

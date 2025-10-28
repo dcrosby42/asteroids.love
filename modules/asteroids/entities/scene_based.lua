@@ -63,31 +63,41 @@ function SB.populate(estore, res)
   local devbg = space_bg:newEntity({
     { "devbg",   {} },
     -- { "paralax", { px = 0.8, py = 0.8 } },
-    { "paralax", { px = 0.5, py = 0.5 } },
+    { "paralax", { px = 0.75, py = 0.75 } },
   })
 
   -- local devgrid1 = space_bg:newEntity({
   --   { "devgrid", {
-  --     tilew = 100,
-  --     tileh = 100,
-  --     color = { 0.5, 0.5, 0.5 },
+  --     tilew = 200,
+  --     tileh = 200,
+  --     color = { 1, 0.5, 0.5, 0.5 },
   --     draw_coords = true,
   --     draw_coords_y = 12,
   --     dot_size = 3
   --   } },
-  --   -- { "paralax", { px = 0.8, py = 0.8 } },
+  --   { "paralax", { px = 0.75, py = 0.75 } },
   -- })
-  -- local devgrid2 = space_bg:newEntity({
-  --   { "devgrid", {
-  --     tilew = 100,
-  --     tileh = 100,
-  --     color = { 1, 1, 1 },
-  --     draw_coords = true,
-  --     dot_size = 3
-  --   } },
-  --   { "paralax", { px = 0.5, py = 0.5 } },
-  -- })
+  local devgrid2 = space_bg:newEntity({
+    { "devgrid", {
+      tilew = 100,
+      tileh = 100,
+      color = { 1, 1, 1 },
+      draw_coords = true,
+      dot_size = 3
+    } },
+    { "paralax", { px = 0.5, py = 0.5 } },
+  })
 
+  local devgridFore = world1:newEntity({
+    { "devgrid", {
+      tilew = 100,
+      tileh = 100,
+      color = { 1, 1, 0, 0.5 },
+      draw_coords = true,
+      dot_size = 3
+    } },
+    { "paralax", { px = -0.25, py = -0.25 } },
+  })
   -- local workbench = world1:newEntity({
   --   { "name",     { name = "ship_workbench" } },
   --   { "state",    { name = "jig", value = "" } },
