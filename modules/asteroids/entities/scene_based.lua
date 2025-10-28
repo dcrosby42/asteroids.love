@@ -60,10 +60,19 @@ function SB.populate(estore, res)
 
   W.camera_dev_controller(estore, camera_name)
 
-  local devbg = space_bg:newEntity({
-    { "devbg",   {} },
-    -- { "paralax", { px = 0.8, py = 0.8 } },
-    { "paralax", { px = 0.75, py = 0.75 } },
+  -- local devbg = space_bg:newEntity({
+  --   { "devbg",   {} },
+  --   { "paralax", { px = 0.75, py = 0.75 } },
+  -- })
+  local nebula = space_bg:newEntity({
+    { "tilingBackground", {} },
+    { "pic",              { id = "nebula_blue" } },
+    { "paralax",          { px = 0.25, py = 0.25 } },
+  })
+  local stars = space_bg:newEntity({
+    { "tilingBackground", {} },
+    { "pic",              { id = "starfield_1" } },
+    { "paralax",          { px = 0.75, py = 0.75 } },
   })
 
   -- local devgrid1 = space_bg:newEntity({
@@ -77,27 +86,28 @@ function SB.populate(estore, res)
   --   } },
   --   { "paralax", { px = 0.75, py = 0.75 } },
   -- })
-  local devgrid2 = space_bg:newEntity({
-    { "devgrid", {
-      tilew = 100,
-      tileh = 100,
-      color = { 1, 1, 1 },
-      draw_coords = true,
-      dot_size = 3
-    } },
-    { "paralax", { px = 0.5, py = 0.5 } },
-  })
+  -- local devgrid2 = space_bg:newEntity({
+  --   { "devgrid", {
+  --     tilew = 100,
+  --     tileh = 100,
+  --     color = { 1, 1, 1 },
+  --     draw_coords = true,
+  --     dot_size = 3
+  --   } },
+  --   { "paralax", { px = 0.5, py = 0.5 } },
+  -- })
 
-  local devgridFore = world1:newEntity({
-    { "devgrid", {
-      tilew = 100,
-      tileh = 100,
-      color = { 1, 1, 0, 0.5 },
-      draw_coords = true,
-      dot_size = 3
-    } },
-    { "paralax", { px = -0.25, py = -0.25 } },
-  })
+  -- local devgridFore = world1:newEntity({
+  --   { "devgrid", {
+  --     tilew = 100,
+  --     tileh = 100,
+  --     color = { 1, 1, 0, 0.5 },
+  --     draw_coords = true,
+  --     dot_size = 3
+  --   } },
+  --   { "paralax", { px = -0.25, py = -0.25 } },
+  -- })
+
   -- local workbench = world1:newEntity({
   --   { "name",     { name = "ship_workbench" } },
   --   { "state",    { name = "jig", value = "" } },

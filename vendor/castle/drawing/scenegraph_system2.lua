@@ -7,6 +7,7 @@ local floor = math.floor
 local G = love.graphics
 local newTransform = love.math.newTransform
 local Comps = require "castle.components"
+local drawPicLike = require 'castle.drawing.draw_piclike'
 
 ---@param viewport Entity
 ---@return Entity camera|nil
@@ -155,10 +156,10 @@ end
 
 Comps.define("devbg", {})
 
-local function drawDevBg(bgEnt, res, viewportEnt)
-  if not bgEnt.devbg then return end
+local function drawDevBg(ent, res, viewportEnt)
+  if not ent.devbg then return end
   --- Determine the AABB bounds of the viewport relative to the current ent transform
-  local relVpBounds = getViewportAABB(viewportEnt, computeEntityTransform2(bgEnt, nil, viewportEnt))
+  local relVpBounds = getViewportAABB(viewportEnt, computeEntityTransform2(ent, nil, viewportEnt))
 
   -- What's the upper-left/lower-right tile numbers intersected by the viewport aabb?
   local tw, th = 100, 100
@@ -175,6 +176,33 @@ local function drawDevBg(bgEnt, res, viewportEnt)
   end
 end
 
+Comps.define("tilingBackground", {
+
+})
+
+local function drawTilingBackground(ent, res, viewportEnt)
+  if not (ent.tilingBackground and ent.pic) then return end
+
+  local pic = shallowclone(ent.pic)
+  local picRes = res.pics:get(pic.id)
+
+  --- Determine the AABB bounds of the viewport relative to the current ent transform
+  local relVpBounds = getViewportAABB(viewportEnt, computeEntityTransform2(ent, nil, viewportEnt))
+
+  -- What's the upper-left/lower-right tile numbers intersected by the viewport aabb?
+  local tw = picRes.rect.w * picRes.sx * pic.sx
+  local th = picRes.rect.h * picRes.sy * pic.sy
+  local gx1, gy1, gx2, gy2 = getIntersectingTileRangeAABB(tw, th, relVpBounds)
+
+  for tilex = gx1, gx2 do
+    for tiley = gy1, gy2 do
+      pic.x = tilex * tw
+      pic.y = tiley * th
+      drawPicLike(pic, picRes, res)
+    end
+  end
+end
+
 local DrawFuncs = {
   require('castle.drawing.draw_screengrid_entity'),
   require('castle.drawing.draw_pic_entities'),
@@ -187,6 +215,7 @@ local DrawFuncs = {
   require('castle.drawing.draw_touch_debugs'),
   drawDevGrid,
   drawDevBg,
+  drawTilingBackground,
 }
 
 
