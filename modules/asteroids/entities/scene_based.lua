@@ -39,7 +39,7 @@ function SB.populate(estore, res)
       -- h = 600,
       cx = 0.5,
       cy = 0.5,
-      debug = true,
+      debug = false,
     } },
   })
 
@@ -53,17 +53,14 @@ function SB.populate(estore, res)
     { "name", { name = "world1" } },
   })
   local camera1 = world1:newEntity({
-    { 'name', { name = camera_name } },
+    { 'name',     { name = camera_name } },
     -- { 'tag',  { name = 'camera' } },
-    { 'tr',   { x = 0, y = 0 } }
+    { 'tr',       { x = 0, y = 0 } },
+    { 'follower', { targetname = "playership" } }
   })
 
   W.camera_dev_controller(estore, camera_name)
 
-  -- local devbg = space_bg:newEntity({
-  --   { "devbg",   {} },
-  --   { "paralax", { px = 0.75, py = 0.75 } },
-  -- })
   local nebula = space_bg:newEntity({
     { "tilingBackground", {} },
     { "pic",              { id = "nebula_blue" } },
@@ -74,39 +71,6 @@ function SB.populate(estore, res)
     { "pic",              { id = "starfield_1" } },
     { "paralax",          { px = 0.75, py = 0.75 } },
   })
-
-  -- local devgrid1 = space_bg:newEntity({
-  --   { "devgrid", {
-  --     tilew = 200,
-  --     tileh = 200,
-  --     color = { 1, 0.5, 0.5, 0.5 },
-  --     draw_coords = true,
-  --     draw_coords_y = 12,
-  --     dot_size = 3
-  --   } },
-  --   { "paralax", { px = 0.75, py = 0.75 } },
-  -- })
-  -- local devgrid2 = space_bg:newEntity({
-  --   { "devgrid", {
-  --     tilew = 100,
-  --     tileh = 100,
-  --     color = { 1, 1, 1 },
-  --     draw_coords = true,
-  --     dot_size = 3
-  --   } },
-  --   { "paralax", { px = 0.5, py = 0.5 } },
-  -- })
-
-  -- local devgridFore = world1:newEntity({
-  --   { "devgrid", {
-  --     tilew = 100,
-  --     tileh = 100,
-  --     color = { 1, 1, 0, 0.5 },
-  --     draw_coords = true,
-  --     dot_size = 3
-  --   } },
-  --   { "paralax", { px = -0.25, py = -0.25 } },
-  -- })
 
   -- local workbench = world1:newEntity({
   --   { "name",     { name = "ship_workbench" } },
@@ -119,8 +83,13 @@ function SB.populate(estore, res)
   -- local Workbench = require "modules.asteroids.entities.workbench"
   -- Workbench.dev_background_nebula_blue(space_bg, res)
   -- Workbench.dev_background_starfield1(space_bg, res)
+  world1:newEntity({
+    { 'name',         { name = "physics_world" } },
+    { 'physicsWorld', { allowSleep = false } },
+  })
 
   local ship = Ship.ship(world1, res)
+  -- ship:newComp("followable", { targetname = "playership" })
 end
 
 return SB

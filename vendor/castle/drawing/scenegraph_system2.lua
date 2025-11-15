@@ -188,7 +188,6 @@ local function drawTilingBackground(ent, res, viewportEnt)
 
   --- Determine the AABB bounds of the viewport relative to the current ent transform
   local relVpBounds = getViewportAABB(viewportEnt, computeEntityTransform2(ent, nil, viewportEnt))
-
   -- What's the upper-left/lower-right tile numbers intersected by the viewport aabb?
   local tw = picRes.rect.w * picRes.sx * pic.sx
   local th = picRes.rect.h * picRes.sy * pic.sy
@@ -255,10 +254,19 @@ local drawViewport2
 ---@param e Entity
 ---@param res table
 ---@param viewportEnt Entity|nil
-local function drawEntity2(e, res, viewportEnt)
+local function drawEntity(e, res, viewportEnt, viewProjection)
   local transform = computeEntityTransform2(e, nil, viewportEnt)
+  -- local transform = trToTransform2(e.tr)
   G.push()
   G.applyTransform(transform)
+  -- if viewProjection then
+  --   transform = viewProjection:clone():apply(transform)
+  -- end
+  -- G.replaceTransform(transform)
+
+  -- if e.paralax and viewportEnt then
+  --   applyParalax_g(e, G, viewportEnt)
+  -- end
 
   if e.viewport then
     drawViewport2(e, res)
@@ -270,11 +278,12 @@ local function drawEntity2(e, res, viewportEnt)
 
   local childs = e:getChildren()
   for i = 1, #childs do
-    drawEntity2(childs[i], res, viewportEnt)
+    drawEntity(childs[i], res, viewportEnt)
   end
 
   G.pop()
 end
+
 
 
 local function startBlockoutStencil(box)
@@ -301,6 +310,7 @@ drawViewport2 = function(viewportEnt, res)
     startBlockoutStencil(viewportEnt.box)
   end
 
+
   if viewportEnt.viewport.use_bgcolor then
     G.setColor(viewportEnt.viewport.bgcolor)
     -- G.rectangle("fill", e.box.x, e.box.y, e.box.w, e.box.h)
@@ -317,7 +327,7 @@ drawViewport2 = function(viewportEnt, res)
 
   -- Draw the actual scene
   -- EDraw.draw_entity(state, scene, vp_ent)
-  drawEntity2(scene, res, viewportEnt)
+  drawEntity(scene, res, viewportEnt, viewProjection)
 
   if camera then
     G.pop()
@@ -343,5 +353,5 @@ return function(estore, res)
   BGColorSystem(estore, res)
 
   local main_scene = estore:getEntityByName("main_scene")
-  drawEntity2(main_scene, res)
+  drawEntity(main_scene, res)
 end

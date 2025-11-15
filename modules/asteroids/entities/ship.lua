@@ -23,12 +23,38 @@ function Ship.ship(parent, res)
       restitution = 0.3,
       categories = Coll.Ships,
       mask = Coll.Roids,
-      -- debug = true,
+      debug = true,
     } },
     { 'force',       {} },
     { 'circleShape', { radius = SHIP_RADIUS } },
     -- State
     { "cooldown",    { name = "lasers", t = 0.1, state = "ready" } },
+    { 'box', {
+      w = 100,
+      h = 100,
+      cx = 0.5,
+      cy = 0.5,
+      debug = true,
+    } },
+    { 'pic', {
+      id = "ship_example_05",
+      -- sx = 1,
+      -- sy = 1,
+      sx = 0.75,
+      sy = 0.75,
+      cx = 0.5,
+      cy = 0.5,
+      debug = true,
+    } },
+  })
+  ship:newEntity({
+    { 'box', {
+      w = 200,
+      h = 200,
+      cx = 0.5,
+      cy = 0.5,
+      debug = true,
+    } },
   })
   ship:newEntity({
     { "tag", { name = "gun_muzzle" } },
@@ -59,17 +85,19 @@ function Ship.ship(parent, res)
       loop = true,
     } },
   })
-  ship:newEntity({
-    { "tag", { name = "ship_body" } },
-    { 'pic', {
-      id = "ship_example_05",
-      sx = 0.75,
-      sy = 0.75,
-      cx = 0.5,
-      cy = 0.5,
-      debug = false,
-    } },
-  })
+  -- ship:newEntity({
+  --   { "tag", { name = "ship_body" } },
+  --   { 'pic', {
+  --     id = "ship_example_05",
+  --     -- sx = 1,
+  --     -- sy = 1,
+  --     sx = 0.75,
+  --     sy = 0.75,
+  --     cx = 0.5,
+  --     cy = 0.5,
+  --     debug = true,
+  --   } },
+  -- })
   return ship
 end
 
