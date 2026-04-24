@@ -73,6 +73,11 @@ end
 
 local applyParalax
 
+-- getEntityParentGlobalTransform(ent, viewport?)
+-- getEntityGlobalTransform(ent, viewport?)
+-- getEntityLocalTransform(ent, viewport?, parentTransform?)
+
+
 local function computeEntityTransform2(ent, relativeToEnt, viewportEnt)
   if ent == nil or ent.eid == nil then
     -- _root node in estore has no eid nor transform, must stop here
