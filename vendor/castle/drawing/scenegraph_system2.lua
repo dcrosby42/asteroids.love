@@ -260,18 +260,14 @@ local drawViewport2
 ---@param res table
 ---@param viewportEnt Entity|nil
 local function drawEntity(e, res, viewportEnt, viewProjection)
-  local transform = computeEntityTransform2(e, nil, viewportEnt)
-  -- local transform = trToTransform2(e.tr)
+  local worldTransform = computeEntityTransform2(e, nil, viewportEnt)
   G.push()
-  G.applyTransform(transform)
-  -- if viewProjection then
-  --   transform = viewProjection:clone():apply(transform)
-  -- end
-  -- G.replaceTransform(transform)
 
-  -- if e.paralax and viewportEnt then
-  --   applyParalax_g(e, G, viewportEnt)
-  -- end
+  if viewProjection then
+    G.replaceTransform(viewProjection:clone():apply(worldTransform))
+  else
+    G.applyTransform(worldTransform)
+  end
 
   if e.viewport then
     drawViewport2(e, res)
@@ -283,7 +279,7 @@ local function drawEntity(e, res, viewportEnt, viewProjection)
 
   local childs = e:getChildren()
   for i = 1, #childs do
-    drawEntity(childs[i], res, viewportEnt)
+    drawEntity(childs[i], res, viewportEnt, viewProjection)
   end
 
   G.pop()
@@ -304,6 +300,7 @@ local function stopBlackoutStencil()
 end
 
 ---@param viewportEnt Entity
+---@param res table
 drawViewport2 = function(viewportEnt, res)
   local scene = viewportEnt:getEstore():getEntityByName(viewportEnt.viewport.scene)
   if not scene then
@@ -315,7 +312,6 @@ drawViewport2 = function(viewportEnt, res)
     startBlockoutStencil(viewportEnt.box)
   end
 
-
   if viewportEnt.viewport.use_bgcolor then
     G.setColor(viewportEnt.viewport.bgcolor)
     -- G.rectangle("fill", e.box.x, e.box.y, e.box.w, e.box.h)
@@ -323,19 +319,22 @@ drawViewport2 = function(viewportEnt, res)
   end
 
   -- Generate view "projection" based on camera (if found)
-  local camera = getViewportCamera(viewportEnt)
-  if camera then
-    local viewProjection = computeEntityTransform2(camera):inverse()
-    G.push()
-    G.applyTransform(viewProjection)
-  end
+  local viewportScreenTransform = computeEntityTransform2(viewportEnt)
+  local cameraEnt = getViewportCamera(viewportEnt)
+  local cameraInverse = computeEntityTransform2(cameraEnt):inverse()
+  local viewProjection = viewportScreenTransform:clone():apply(cameraInverse)
+  -- if cameraEnt then
+  --   local viewProjection = computeEntityTransform2(cameraEnt):inverse()
+  --   G.push()
+  --   G.applyTransform(viewProjection)
+  -- end
 
   -- Draw the actual scene
   -- EDraw.draw_entity(state, scene, vp_ent)
   drawEntity(scene, res, viewportEnt, viewProjection)
 
-  if camera then
-    G.pop()
+  if cameraEnt then
+    -- G.pop()
     if debug then
       G.setColor(1, 0.5, 0)
       G.circle("line", 0, 0, 15)
@@ -354,6 +353,7 @@ end
 
 
 ---@param estore Estore
+---@param res table
 return function(estore, res)
   BGColorSystem(estore, res)
 
