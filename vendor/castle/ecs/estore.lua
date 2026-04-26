@@ -251,6 +251,7 @@ function Estore:transferComp(eFrom, eTo, comp)
   self:addComp(eTo, comp)
 end
 
+---@return Entity ent
 function Estore:getEntity(eid)
   return self.ents[eid]
 end

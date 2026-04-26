@@ -1,5 +1,6 @@
 local W = require "modules.asteroids.entities.world"
 local Ship = require "modules.asteroids.entities.ship"
+local Roids = require "modules.asteroids.entities.roids"
 
 local SB = {}
 
@@ -88,8 +89,18 @@ function SB.populate(estore, res)
     { 'physicsWorld', { allowSleep = false } },
   })
 
+  local pi = math.pi
+  local kinds = { "small", "medium", "medium_large", "large", "huge" }
+  for i = 1, 100 do
+    local x = randomInt(-4000, 4000)
+    local y = randomInt(-4000, 4000)
+    local roid = Roids.random(world1, { sizeCat = pickRandom(kinds), x = x, y = y })
+    roid.vel.angularvelocity = randomFloat(-pi / 2, pi / 2)
+    roid.vel.dx = randomFloat(-30, 30)
+    roid.vel.dy = randomFloat(-30, 30)
+  end
+
   local ship = Ship.ship(world1, res)
-  -- ship:newComp("followable", { targetname = "playership" })
 end
 
 return SB

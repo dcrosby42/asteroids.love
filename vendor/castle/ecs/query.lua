@@ -18,6 +18,7 @@ end
 
 ---Accepts an entity store, returns a list of 0 or more matching Entities.
 ---@param estore Estore the estore
+---@return Entity ents the list of entity results
 function Query:execute(estore)
   local ents = {}
   if self.indexLookup then
@@ -30,6 +31,8 @@ function Query:execute(estore)
 end
 
 -- Implement "callable" interface; a Query object may be invoked like a function.
+---@param estore Estore the estore
+---@return Entity ents the list of entity results
 function Query:__call(estore)
   return self:execute(estore)
 end
@@ -39,6 +42,9 @@ end
 -- Remaining comp types are combined using the hasComps predicate composer.
 -- Modifies queryArgs in-place and also returns it.
 -- Does nothing if compTypes is empty.
+---@param queryArgs table
+---@param compTypes table
+---@returns table queryArgs
 local function addCompTypes(queryArgs, compTypes)
   if not compTypes or #compTypes == 0 then return queryArgs end
   if not queryArgs.indexLookup then
@@ -101,6 +107,8 @@ local function expand(args)
   end
 end
 
+---@param queryArgs table
+---@return Query query
 function Query.create(queryArgs)
   local query = Query:new(expand(queryArgs))
   return query

@@ -101,11 +101,12 @@ local function applyShipController(ship, estore, dt)
     end
   end
 
-  -- Show ship flame only when thrust active
+  -- Show ship flame only when thrust active; pulse sy when on
   local shipFlame = estore:queryFirstEntity(ShipFlameQuery)
   if shipFlame then
     if con.accel > 0 then
       shipFlame.pic.color[4] = 1
+      shipFlame.pic.sy = 0.75 + math.sin(shipFlame.timer.t * 4 * math.pi * 2) * 0.1
     else
       shipFlame.pic.color[4] = 0
     end

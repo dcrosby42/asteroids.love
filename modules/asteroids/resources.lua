@@ -25,6 +25,7 @@ return {
           -- "modules.asteroids.systems.ship_workbench_system",
           "modules.asteroids.systems.camera_dev_system",
           "modules.asteroids.systems.ship_controller",
+          "modules.asteroids.systems.battle_system",
           "modules.asteroids.systems.boxthinger",
         }
       },
