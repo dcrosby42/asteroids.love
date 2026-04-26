@@ -9,10 +9,10 @@ local newTransform = love.math.newTransform
 local Comps = require "castle.components"
 local drawPicLike = require 'castle.drawing.draw_piclike'
 
----@param viewport Entity
+---@param viewportEnt Entity
 ---@return Entity camera|nil
-local function getViewportCamera(viewport)
-  return viewport:getEstore():getEntityByName(viewport.viewport.camera)
+local function getViewportCamera(viewportEnt)
+  return viewportEnt:getEstore():getEntityByName(viewportEnt.viewport.camera)
 end
 
 ---@param box table
@@ -90,7 +90,7 @@ local function computeEntityTransform2(ent, relativeToEnt, viewportEnt)
 
   -- Compute a love2d Transform for the entity based on its tr component.
   -- The transform is recursively derived up to the root ancestor entity.
-  local transform = computeEntityTransform2(ent:getParent(), relativeToEnt)
+  local transform = computeEntityTransform2(ent:getParent(), relativeToEnt, viewportEnt)
   if ent.tr then
     transform:apply(trToTransform2(ent.tr))
   end
@@ -230,27 +230,35 @@ local DrawFuncs = {
 ---   0.5: half paralax, entity appears to "move" at half speed
 ---   1: full paralax, entity appears affixed to camera
 function applyParalax(e, transform, viewportEnt)
-  if not viewportEnt then return end
+  if not viewportEnt then return transform end
   local cameraEnt = getViewportCamera(viewportEnt)
-  if not cameraEnt then return end
+  if not cameraEnt then return transform end
 
   local cameraTransform = computeEntityTransform2(cameraEnt)
-  local cx, cy = cameraTransform:transformPoint(cameraEnt.tr.x, cameraEnt.tr.y)
-  local ex, ey -- # = transform:transformPoint(e.tr.x, e.tr.y)
+  -- DELETEME: local cx, cy = cameraTransform:transformPoint(cameraEnt.tr.x, cameraEnt.tr.y)
+  local cx, cy = cameraTransform:transformPoint(0, 0)
+
+  local ex, ey
   if e.tr then
-    ex, ey = transform:transformPoint(e.tr.x, e.tr.y)
+    -- DELETEME: ex, ey = transform:transformPoint(e.tr.x, e.tr.y)
+    ex, ey = transform:transformPoint(0, 0)
   else
     -- cope with entities that lack a tr
     ex, ey = 0, 0
   end
-  local dx = (cx - ex)
-  local dy = (cy - ey)
-  -- Compute "drag along" factor... how much toward the camera to move the bg entity
-  local mysterious_correction = 0.5 -- I CANNOT FIGURE OUT WHY I NEED THIS.  Paralax seems 2x as powerful as I think it should be.
-  -- Translate to achieve false paralax:
-  transform:translate(
-    dx * e.paralax.px * mysterious_correction,
-    dy * e.paralax.py * mysterious_correction)
+  local dx = cx - ex
+  local dy = cy - ey
+
+  -- DELETEME:
+  -- -- Compute "drag along" factor... how much toward the camera to move the bg entity
+  -- local mysterious_correction = 0.5 -- I CANNOT FIGURE OUT WHY I NEED THIS.  Paralax seems 2x as powerful as I think it should be.
+  -- -- Translate to achieve false paralax:
+  -- transform:translate(
+  --   dx * e.paralax.px * mysterious_correction,
+  --   dy * e.paralax.py * mysterious_correction,
+  -- )
+
+  transform:translate(dx * e.paralax.px, dy * e.paralax.py)
   return transform
 end
 
@@ -266,7 +274,7 @@ local function drawEntity(e, res, viewportEnt, viewProjection)
   if viewProjection then
     G.replaceTransform(viewProjection:clone():apply(worldTransform))
   else
-    G.applyTransform(worldTransform)
+    G.replaceTransform(worldTransform)
   end
 
   if e.viewport then
