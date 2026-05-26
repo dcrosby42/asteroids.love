@@ -48,7 +48,7 @@ end
 -- the global Comp definitions.
 local function loadComponents(componentsCfg)
   assert(componentsCfg.data or componentsCfg.datafile,
-    "loadEntities: expected 'data' or 'datafile' in config " ..
+    "loadComponents: expected 'data' or 'datafile' in config " ..
     inspect(componentsCfg))
   local defs = Loaders.getData(componentsCfg)
   if defs then
