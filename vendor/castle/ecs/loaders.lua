@@ -47,13 +47,18 @@ end
 -- "CHEAT" this method doesn't put the definitions in a clever place, it just modifies
 -- the global Comp definitions.
 local function loadComponents(componentsCfg)
-  if not componentsCfg then return end
+  if not componentsCfg then
+    -- no special comp defs
+    return Comp
+  end
   assert(componentsCfg.data or componentsCfg.datafile,
     "loadComponents: expected 'data' or 'datafile' in config " ..
     inspect(componentsCfg))
   local defs = Loaders.getData(componentsCfg)
   if defs then
-    for compType, compDef in pairs(defs) do Comp.define(compType, compDef) end
+    for compType, compDef in pairs(defs) do
+      Comp.define(compType, compDef)
+    end
   end
   return Comp
 end
