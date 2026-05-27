@@ -47,6 +47,7 @@ end
 -- "CHEAT" this method doesn't put the definitions in a clever place, it just modifies
 -- the global Comp definitions.
 local function loadComponents(componentsCfg)
+  if not componentsCfg then return end
   assert(componentsCfg.data or componentsCfg.datafile,
     "loadComponents: expected 'data' or 'datafile' in config " ..
     inspect(componentsCfg))
