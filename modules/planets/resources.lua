@@ -51,10 +51,10 @@ return {
       realize_on_module_load = true,
     },
   },
-  -- {
-  --   type = "resource_file",
-  --   file = "modules/asteroids/images/roidpics.res.lua",
-  -- },
+  {
+    type = "resource_file",
+    file = "modules/planets/images/planets.res.lua",
+  },
   {
     type = "resource_file",
     file = "modules/asteroids/images/bg/backgrounds.res.lua",
