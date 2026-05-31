@@ -9,7 +9,7 @@ local RotFactor = math.pi / 8
 local PanFactor = 200
 local TweenTime = 0.5
 -- local TweenTime = 2
-local Debug = (require "mydebug").sub("camera_dev_system", false, false)
+local Debug = (require "mydebug").sub("camera_dev_system", true, true)
 
 local round = math.round
 
@@ -87,6 +87,62 @@ local function updateCameraDebugVis(camera)
   camera.label.text = cameraDbgText(camera)
 end
 
+local Query = require "castle.ecs.query"
+local planetQuery = Query.create({
+  indexLookup = { name = "byTag", key = "planet" }
+})
+
+local function focusNextPlanet(estore, devController, camera)
+  -- Figure out which (if any) planet is focused
+  local focusedPlanet = ""
+  if devController.states.focused_planet then
+    focusedPlanet = devController.states.focused_planet.value
+  else
+    -- first time, let's add a place to store the focus state
+    devController:newComp("state", { name = "focused_planet", value = "" })
+  end
+
+  -- Find all planets
+  local planetEnts = planetQuery(estore)
+  if #planetEnts == 0 then
+    -- Nothing to do
+    Debug.println("Couldn't find any planets to focus")
+    return
+  end
+
+  -- Find the currently focused planet (if we think we have one)
+  local currentPlanetIdx = 1
+  if focusedPlanet and focusedPlanet ~= "" then
+    for i = 1, #planetEnts do
+      if planetEnts[i].name.name == focusedPlanet then
+        currentPlanetIdx = i
+      end
+    end
+  end
+
+  -- Find the new planet to focus
+  local nextPlanetIdx = currentPlanetIdx + 1
+  if nextPlanetIdx > #planetEnts then
+    -- wrap back to the front of the list
+    nextPlanetIdx = 1
+  end
+
+  -- Begin focusing animation by tweening the camera to the new location
+  if nextPlanetIdx <= #planetEnts then
+    local planetE = planetEnts[nextPlanetIdx]
+    Debug.println("Switching focus to " .. planetE.name.name)
+    panCameraTo(camera, planetE.tr.x, planetE.tr.y)
+
+    local info = planetE.states.object_info.value
+    zoomCameraTo(camera, info.camera_zoom)
+    rotateCameraTo(camera, 0)
+
+    -- Save focus state
+    local nextName = planetE.name.name
+    devController.states.focused_planet.value = nextName
+  end
+end
+
 
 return defineQuerySystem(
   { tag = 'camera_dev_controller' },
@@ -122,6 +178,10 @@ return defineQuerySystem(
     end
     if e.keystate.pressed["d"] then
       panCameraBy(camera, PanFactor, 0)
+    end
+
+    if e.keystate.pressed["tab"] then
+      focusNextPlanet(estore, e, camera)
     end
 
     if e.states.debug.value == true then

@@ -10,25 +10,35 @@ local function storeScreenSizeInRes(res)
   res:get("data"):put("screen_size", { width = w, height = h })
 end
 
-local Facts = {
-  earth = {
+local SolObjects = {
+  {
+    name = "earth",
+    label = "Earth",
     diameter_km = 12742,
+    distance_from_earth_km = 0,
     pic_id = "earth",
     pic_size = 1600,
+    camera_zoom = 0.4,
   },
-  moon = {
+  {
+    name = "moon",
+    label = "Luna",
     diameter_km = 3474,
     distance_from_earth_km = 384400,
     pic_id = "moon",
     pic_size = 800,
+    camera_zoom = 0.2,
   },
 }
 
+
 -- SCALE = 1 / 10 -- 1 pixel = 10 km
-SCALE = 0.5 -- 1 pixel = 5km
-EARTH_SCALE = SCALE
-MOON_SCALE = SCALE * (Facts.earth.pic_size / Facts.moon.pic_size) *
-    (Facts.moon.diameter_km / Facts.earth.diameter_km)
+local PX_KM = 0.2 -- pixels-per-km, 1 pixel = 5km
+
+-- Planel pic size adjust.  The pngs I got aren't automatically relativeley sized to each other
+local function computeEarthRelativeObjectScale(earth, object)
+  return PX_KM * (earth.pic_size / object.pic_size) * (object.diameter_km / earth.diameter_km)
+end
 
 
 local E = {}
@@ -83,32 +93,35 @@ local function addSpaceBackground(parent)
   return spaceBG
 end
 
-local function addPlanets(world)
-  world:newEntity({
-    { 'name', { name = "earth" } },
-    { "pic", {
-      cx = 0.5,
-      cy = 0.5,
-      id = "earth",
-      sx = EARTH_SCALE,
-      sy = EARTH_SCALE,
-      debug = false,
-    } },
-    { 'tr',   {} },
-  })
+local function addPlanets(world, objects)
+  local objectsByName = keyBy(objects, "name")
+  local earth = objectsByName["earth"]
 
-  world:newEntity({
-    { 'name', { name = "moon" } },
-    { "pic", {
-      cx = 0.5,
-      cy = 0.5,
-      sx = MOON_SCALE,
-      sy = MOON_SCALE,
-      id = "moon",
-      debug = false,
-    } },
-    { 'tr',   {} },
-  })
+  for i = 1, #objects do
+    local obj = objects[i]
+    local x_loc = PX_KM * obj.distance_from_earth_km
+    local size = computeEarthRelativeObjectScale(earth, obj)
+    world:newEntity({
+      { 'name', { name = obj.name } },
+      { 'tag',  { name = "planet" } },
+      { "pic", {
+        cx = 0.5,
+        cy = 0.5,
+        sx = size,
+        sy = size,
+        id = obj.pic_id or obj.name,
+        debug = false,
+      } },
+      { 'tr', {
+        x = x_loc,
+        y = 0,
+      } },
+      { 'state', {
+        name = "object_info",
+        value = obj,
+      } },
+    })
+  end
 end
 
 function E.initialEntities(res)
@@ -163,12 +176,16 @@ function E.initialEntities(res)
   --   { 'physicsWorld', { allowSleep = false } },
   -- })
 
-  addPlanets(world)
+  -- addPlanets(world)
+  addPlanets(world, SolObjects)
 
   -- Add camera
   local camera = Cam.camera(world, res, camera_name)
   -- camera:addComp("follower", {targetname = "playership"})
-  Cam.camera_dev_controller(world, camera_name)
+  local controller = Cam.camera_dev_controller(world, camera_name)
+  controller.states.debug.value = true
+  local keys = controller.keystate.handle
+  keys[#keys + 1] = "tab"
 
   return estore
 end

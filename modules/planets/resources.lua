@@ -59,13 +59,13 @@ return {
     type = "resource_file",
     file = "modules/asteroids/images/bg/backgrounds.res.lua",
   },
-  -- {
-  --   type = "font",
-  --   name = "narpassword",
-  --   data = {
-  --     file = "modules/common/fonts/narpassword.ttf",
-  --     -- choices = { 24, 48, 64 },
-  --     choices = { 64 },
-  --   },
-  -- },
+  {
+    type = "font",
+    name = "narpassword",
+    data = {
+      file = "modules/common/fonts/narpassword.ttf",
+      -- choices = { 24, 48, 64 },
+      choices = { 64 },
+    },
+  },
 }
